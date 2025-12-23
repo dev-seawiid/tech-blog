@@ -1,0 +1,1848 @@
+---
+title: '📚 JavaScript 유용한 유틸리티 함수 및 ES2020+ 최신 문법 정리(2025 기준)'
+date: '2025-12-23'
+tags:
+  [
+    'javascript',
+    'ecmascript',
+    'es2020+',
+    'nodejs',
+    '알고리즘',
+    '코딩테스트',
+    '문법',
+    'cheatsheet',
+    '유틸리티',
+  ]
+draft: false
+summary: '📚 JavaScript 유용한 유틸리티 함수 및 ES2020+ 최신 문법 정리(2025 기준)'
+---
+
+## 1. 유용한 유틸리티 함수들
+
+알고리즘 문제 해결에 자주 사용되는 유틸리티 함수들입니다. 버전과 관계없이 실무에서 유용한 기능들을 정리했습니다.
+
+### 1.1 Math 관련 함수들
+
+- **`Math.trunc()`**
+  - **설명**: 소수점을 버리고 정수 부분만 반환합니다 (소수점 버림).
+  - **알고리즘 활용**: 나눗셈의 몫을 구하거나, 정수 변환이 필요할 때 사용합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const quotient = Math.floor(a / b) // 음수에서 다르게 동작
+  const quotient2 = parseInt(a / b) // 느리고 부정확
+
+  // ✅ Math.trunc() 사용
+  const quotient = Math.trunc(a / b) // 소수점 버림 (몫)
+  Math.trunc(3.7) // 3
+  Math.trunc(-3.7) // -3
+  Math.trunc(3.1) // 3
+
+  // 실전 예시: 나눗셈 몫 구하기
+  function divide(a, b) {
+    return Math.trunc(a / b)
+  }
+
+  // 실전 예시: 정수 변환
+  function toInt(n) {
+    return Math.trunc(n)
+  }
+
+  // 실전 예시: 자릿수 분리
+  function getDigits(n) {
+    return Math.trunc(Math.abs(n)).toString().length
+  }
+  ```
+
+  - **주의점**:
+    - `Math.floor()`와 달리 음수에서도 소수점만 버립니다 (`Math.floor(-3.7)` = -4, `Math.trunc(-3.7)` = -3).
+    - `parseInt()`보다 빠르고 정확합니다.
+  - **개선점**: 나눗셈의 몫을 구할 때 `Math.floor()`보다 직관적이고 정확합니다.
+
+- **`Math.max()` / `Math.min()`**
+  - **설명**: 여러 값 중 최대값/최소값을 반환합니다.
+  - **알고리즘 활용**: 배열의 최대/최소값 찾기, 두 값 비교, 경계값 체크 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function findMax(arr) {
+    let max = arr[0]
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i] > max) max = arr[i]
+    }
+    return max
+  }
+
+  // ✅ Math.max() 사용
+  const max = Math.max(1, 5, 3, 9, 2) // 9
+  const maxFromArray = Math.max(...arr) // 배열의 최대값
+  const min = Math.min(1, 5, 3, 9, 2) // 1
+
+  // 실전 예시: 배열 최대/최소값
+  function getMaxMin(arr) {
+    return { max: Math.max(...arr), min: Math.min(...arr) }
+  }
+
+  // 실전 예시: 경계값 제한
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max)
+  }
+
+  // 실전 예시: 두 값 중 큰/작은 값 선택
+  function maxPath(a, b) {
+    return Math.max(a, b)
+  }
+
+  // 실전 예시: 여러 경로 중 최단 거리
+  function shortestPath(paths) {
+    return Math.min(...paths)
+  }
+  ```
+
+  - **주의점**:
+    - 인자가 없으면 `Math.max()`는 `-Infinity`, `Math.min()`은 `Infinity`를 반환합니다.
+    - 배열을 직접 받지 않으므로 스프레드 연산자(`...`)를 사용해야 합니다.
+  - **개선점**: 최대/최소값 계산이 간결하고 가독성이 좋습니다.
+
+- **`Math.abs()`**
+  - **설명**: 숫자의 절댓값을 반환합니다.
+  - **알고리즘 활용**: 거리 계산, 차이값 계산, 음수 처리 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function abs(n) {
+    return n < 0 ? -n : n
+  }
+
+  // ✅ Math.abs() 사용
+  Math.abs(-5) // 5
+  Math.abs(5) // 5
+  Math.abs(0) // 0
+
+  // 실전 예시: 두 점 사이 거리 (절댓값)
+  function manhattanDistance(x1, y1, x2, y2) {
+    return Math.abs(x2 - x1) + Math.abs(y2 - y1)
+  }
+
+  // 실전 예시: 차이값 계산
+  function difference(a, b) {
+    return Math.abs(a - b)
+  }
+
+  // 실전 예시: 음수 방지
+  function ensurePositive(n) {
+    return Math.abs(n)
+  }
+
+  // 실전 예시: 배열 요소 차이의 최대값
+  function maxDifference(arr) {
+    return Math.max(...arr) - Math.min(...arr)
+  }
+  ```
+
+  - **주의점**:
+    - `Math.abs(-0)`은 `0`을 반환합니다 (부호 있는 0 처리).
+    - `NaN`을 입력하면 `NaN`을 반환합니다.
+  - **개선점**: 절댓값 계산이 간단하고 명확합니다.
+
+- **`Math.floor()`, `Math.ceil()`, `Math.round()`**
+  - **설명**: 반올림 관련 함수들입니다.
+  - **알고리즘 활용**: 올림/내림/반올림이 필요한 계산에 사용됩니다.
+
+  ```javascript
+  // ✅ 반올림 함수들
+  Math.floor(3.7) // 3 (내림)
+  Math.ceil(3.2) // 4 (올림)
+  Math.round(3.5) // 4 (반올림)
+  Math.floor(-3.7) // -4 (음수 내림)
+  Math.ceil(-3.2) // -3 (음수 올림)
+
+  // 실전 예시: 올림 나눗셈
+  function ceilDivide(a, b) {
+    return Math.ceil(a / b)
+  }
+
+  // 실전 예시: 페이지 계산
+  function getTotalPages(items, itemsPerPage) {
+    return Math.ceil(items / itemsPerPage)
+  }
+
+  // 실전 예시: 반올림
+  function roundToDecimal(n, decimals) {
+    const factor = 10 ** decimals
+    return Math.round(n * factor) / factor
+  }
+
+  // 실전 예시: 내림 나눗셈
+  function floorDivide(a, b) {
+    return Math.floor(a / b)
+  }
+  ```
+
+  - **주의점**:
+    - `Math.floor()`는 항상 아래로, `Math.ceil()`은 항상 위로 반올림합니다.
+    - `Math.round()`는 0.5에서 위로 반올림합니다 (양수 기준).
+    - 음수에서 `Math.floor()`와 `Math.trunc()`의 동작이 다릅니다.
+  - **개선점**: 다양한 반올림 요구사항을 처리할 수 있습니다.
+
+- **`Math.hypot(...values)`**
+  - **설명**: 피타고라스 정리($\sqrt{x^2 + y^2}$)를 쉽게 계산합니다.
+  - **알고리즘 활용**: 두 점 사이의 거리 계산이나 벡터의 크기 계산 시 사용합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+  }
+
+  // ✅ Math.hypot() 사용
+  const dist = Math.hypot(3, 4) // 5 (3-4-5 직각삼각형)
+  const dist2 = Math.hypot(x2 - x1, y2 - y1) // 두 점 사이 거리
+
+  // 실전 예시: 유클리드 거리
+  function euclideanDistance(p1, p2) {
+    return Math.hypot(p2.x - p1.x, p2.y - p1.y)
+  }
+
+  // 실전 예시: 3D 거리
+  function distance3D(p1, p2) {
+    return Math.hypot(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+  }
+
+  // 실전 예시: 벡터 크기
+  function vectorMagnitude(v) {
+    return Math.hypot(...v)
+  }
+  ```
+
+  - **주의점**:
+    - 여러 인자를 받을 수 있어서 2D, 3D, N차원 거리 계산이 모두 가능합니다.
+    - 오버플로우를 방지하기 위해 내부적으로 최적화되어 있습니다.
+  - **개선점**: 거리 계산이 간결하고 오버플로우 위험이 적습니다.
+
+### 1.2 Number 관련 함수들
+
+- **`Number.isInteger()`**
+  - **설명**: 값이 정수인지 확인합니다.
+  - **알고리즘 활용**: 입력 검증이나 타입 체크 시 사용합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function isInt(n) {
+    return n % 1 === 0
+  }
+
+  // ✅ Number.isInteger() 사용
+  Number.isInteger(3) // true
+  Number.isInteger(3.0) // true
+  Number.isInteger(3.5) // false
+  Number.isInteger('3') // false (문자열은 false)
+
+  // 실전 예시: 입력 검증
+  function validateInput(n) {
+    if (!Number.isInteger(n) || n < 0) {
+      throw new Error('양의 정수만 입력 가능합니다')
+    }
+  }
+
+  // 실전 예시: 정수 필터링
+  function filterIntegers(arr) {
+    return arr.filter(Number.isInteger)
+  }
+  ```
+
+  - **주의점**:
+    - 문자열이나 다른 타입은 `false`를 반환합니다.
+    - `NaN`과 `Infinity`도 `false`를 반환합니다.
+  - **개선점**: 타입 안전한 정수 체크가 가능합니다.
+
+- **`parseInt()`, `parseFloat()`**
+  - **설명**: 문자열을 숫자로 변환합니다.
+  - **알고리즘 활용**: 입력 파싱, 진법 변환 등에 사용됩니다.
+
+  ```javascript
+  // ✅ 문자열 숫자 변환
+  parseInt('123') // 123
+  parseInt('123.45') // 123 (정수만)
+  parseFloat('123.45') // 123.45
+  parseInt('1010', 2) // 10 (2진수)
+  parseInt('FF', 16) // 255 (16진수)
+
+  // 실전 예시: 입력 파싱
+  function parseInput(input) {
+    return parseInt(input.trim(), 10)
+  }
+
+  // 실전 예시: 진법 변환
+  function binaryToDecimal(binary) {
+    return parseInt(binary, 2)
+  }
+
+  // 실전 예시: 안전한 숫자 변환
+  function safeParseInt(str, defaultValue = 0) {
+    const parsed = parseInt(str, 10)
+    return isNaN(parsed) ? defaultValue : parsed
+  }
+
+  // 실전 예시: 여러 진법 지원
+  function parseNumber(str, radix = 10) {
+    return parseInt(str, radix)
+  }
+  ```
+
+  - **주의점**:
+    - `parseInt()`는 두 번째 인자(radix)를 명시하는 것이 좋습니다 (기본값이 10이 아니므로).
+    - `parseInt('')`는 `NaN`을 반환합니다.
+    - `Number()`와 달리 앞부분만 파싱합니다 (`parseInt('123abc')` = 123).
+  - **개선점**: 문자열 입력을 숫자로 변환할 때 유용합니다.
+
+### 1.3 Array 관련 함수들
+
+- **`Array.from({ length: N }, mapFn)`**
+  - **설명**: 특정 길이의 배열을 만들고 동시에 초기화할 때 사용합니다.
+  - **알고리즘 활용**: 2차원 배열 초기화나 특정 패턴의 배열 생성에 최적입니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const arr = []
+  for (let i = 0; i < 10; i++) {
+    arr.push(0)
+  }
+  // 또는
+  const arr2 = new Array(10).fill(0)
+
+  // ✅ Array.from() 사용
+  const arr = Array.from({ length: 10 }, () => 0) // [0, 0, 0, ...]
+  const arr2 = Array.from({ length: 10 }, (_, i) => i) // [0, 1, 2, ..., 9]
+
+  // 실전 예시: 2차원 배열 초기화
+  function create2DArray(rows, cols, defaultValue = 0) {
+    return Array.from({ length: rows }, () => Array.from({ length: cols }, () => defaultValue))
+  }
+
+  // 실전 예시: 순차 배열 생성
+  function range(start, end) {
+    return Array.from({ length: end - start }, (_, i) => start + i)
+  }
+
+  // 실전 예시: 특정 패턴 배열
+  function createPattern(length, patternFn) {
+    return Array.from({ length }, (_, i) => patternFn(i))
+  }
+
+  // 실전 예시: 인덱스 기반 초기화
+  const matrix = Array.from({ length: 5 }, (_, i) => Array.from({ length: 5 }, (_, j) => i * 5 + j))
+  ```
+
+  - **주의점**:
+    - 두 번째 인자(mapFn)를 생략하면 `undefined`로 채워진 배열이 생성됩니다.
+    - `new Array(n).fill()`과 달리 각 요소를 독립적으로 초기화할 수 있습니다.
+  - **개선점**: 배열 초기화가 더 유연하고 함수형 프로그래밍 스타일에 적합합니다.
+
+- **`Array.prototype.includes()`**
+  - **설명**: 배열에 특정 요소가 포함되어 있는지 확인합니다.
+  - **알고리즘 활용**: 존재 여부 체크, 중복 검사, 필터링 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function contains(arr, item) {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] === item) return true
+    }
+    return false
+  }
+  // 또는
+  arr.indexOf(item) !== -1
+
+  // ✅ includes() 사용
+  const arr = [1, 2, 3, 4, 5]
+  arr.includes(3) // true
+  arr.includes(6) // false
+  arr.includes(2, 3) // false (인덱스 3부터 검색)
+
+  // 실전 예시: 존재 여부 체크
+  function isValid(value, allowedValues) {
+    return allowedValues.includes(value)
+  }
+
+  // 실전 예시: 중복 체크
+  function addIfNotExists(arr, item) {
+    if (!arr.includes(item)) {
+      arr.push(item)
+    }
+    return arr
+  }
+
+  // 실전 예시: 필터링
+  function filterByValues(arr, values) {
+    return arr.filter((item) => values.includes(item))
+  }
+
+  // 실전 예시: 문자열 포함 체크
+  function hasVowel(str) {
+    return ['a', 'e', 'i', 'o', 'u'].some((v) => str.includes(v))
+  }
+  ```
+
+  - **주의점**:
+    - `indexOf()`와 달리 `NaN`도 올바르게 처리합니다 (`[NaN].includes(NaN)` = true).
+    - 두 번째 인자로 시작 인덱스를 지정할 수 있습니다.
+  - **개선점**: `indexOf() !== -1`보다 가독성이 좋고 직관적입니다.
+
+- **`Array.prototype.slice()` / `String.prototype.slice()`**
+  - **설명**: 배열이나 문자열의 일부를 추출합니다.
+  - **알고리즘 활용**: 부분 배열/문자열 추출, 복사 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ slice() 사용
+  const arr = [1, 2, 3, 4, 5]
+  arr.slice(1, 3) // [2, 3] (인덱스 1부터 3 전까지)
+  arr.slice(2) // [3, 4, 5] (인덱스 2부터 끝까지)
+  arr.slice() // [1, 2, 3, 4, 5] (전체 복사)
+  arr.slice(-2) // [4, 5] (뒤에서 2개)
+
+  const str = 'hello'
+  str.slice(1, 3) // 'el'
+  str.slice(2) // 'llo'
+  str.slice(-2) // 'lo'
+
+  // 실전 예시: 배열 복사
+  function copyArray(arr) {
+    return arr.slice()
+  }
+
+  // 실전 예시: 부분 배열 추출
+  function getSubarray(arr, start, end) {
+    return arr.slice(start, end)
+  }
+
+  // 실전 예시: 문자열 부분 추출
+  function getSubstring(str, start, end) {
+    return str.slice(start, end)
+  }
+
+  // 실전 예시: 마지막 N개 요소
+  function getLastN(arr, n) {
+    return arr.slice(-n)
+  }
+
+  // 실전 예시: 첫 N개 요소 제외
+  function skipFirstN(arr, n) {
+    return arr.slice(n)
+  }
+  ```
+
+  - **주의점**:
+    - `slice()`는 원본을 변경하지 않습니다 (splice()와 다름).
+    - 음수 인덱스는 배열/문자열 끝에서부터 계산됩니다.
+    - 두 번째 인자를 생략하면 끝까지 추출합니다.
+  - **개선점**: 배열/문자열의 부분 추출이 간단하고 안전합니다.
+
+### 1.4 String 관련 함수들
+
+- **`String.prototype.split()` / `Array.prototype.join()`**
+  - **설명**: 중첩 반복문을 한 번에 `break` 하거나 `continue` 할 때 사용합니다.
+  - **알고리즘 활용**: 이중/삼중 루프에서 특정 조건 만족 시 모든 루프를 빠져나올 때 유용합니다.
+
+  ```javascript
+  // ❌ 기존 방식 (flag 변수 사용)
+  let found = false
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (condition) {
+        found = true
+        break
+      }
+    }
+    if (found) break
+  }
+
+  // ✅ Label 사용
+  outerLoop: for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (condition) {
+        break outerLoop // 모든 루프 종료
+      }
+    }
+  }
+
+  // 실전 예시: 2D 배열 탐색
+  function findIn2D(grid, target) {
+    searchLoop: for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        if (grid[i][j] === target) {
+          return [i, j]
+        }
+        if (grid[i][j] > target) {
+          break searchLoop // 정렬된 배열에서 조기 종료
+        }
+      }
+    }
+    return null
+  }
+
+  // 실전 예시: continue로 특정 루프 계속
+  outer: for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 10; j++) {
+      if (j === 5) {
+        continue outer // 외부 루프의 다음 반복으로
+      }
+    }
+  }
+  ```
+
+  - **주의점**:
+    - Label 이름은 식별자 규칙을 따라야 하며, 콜론(`:`)으로 끝나야 합니다.
+    - 남용하면 코드 가독성이 떨어질 수 있으므로 필요한 경우에만 사용합니다.
+  - **개선점**: flag 변수 없이 깔끔하게 중첩 루프를 제어할 수 있습니다.
+
+- **`Math.max()` / `Math.min()`**
+  - **설명**: 여러 값 중 최대값/최소값을 반환합니다.
+  - **알고리즘 활용**: 배열의 최대/최소값 찾기, 두 값 비교, 경계값 체크 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function findMax(arr) {
+    let max = arr[0]
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i] > max) max = arr[i]
+    }
+    return max
+  }
+
+  // ✅ Math.max() 사용
+  const max = Math.max(1, 5, 3, 9, 2) // 9
+  const maxFromArray = Math.max(...arr) // 배열의 최대값
+  const min = Math.min(1, 5, 3, 9, 2) // 1
+
+  // 실전 예시: 배열 최대/최소값
+  function getMaxMin(arr) {
+    return { max: Math.max(...arr), min: Math.min(...arr) }
+  }
+
+  // 실전 예시: 경계값 제한
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max)
+  }
+
+  // 실전 예시: 두 값 중 큰/작은 값 선택
+  function maxPath(a, b) {
+    return Math.max(a, b)
+  }
+
+  // 실전 예시: 여러 경로 중 최단 거리
+  function shortestPath(paths) {
+    return Math.min(...paths)
+  }
+  ```
+
+  - **주의점**:
+    - 인자가 없으면 `Math.max()`는 `-Infinity`, `Math.min()`은 `Infinity`를 반환합니다.
+    - 배열을 직접 받지 않으므로 스프레드 연산자(`...`)를 사용해야 합니다.
+  - **개선점**: 최대/최소값 계산이 간결하고 가독성이 좋습니다.
+
+- **`Math.abs()`**
+  - **설명**: 숫자의 절댓값을 반환합니다.
+  - **알고리즘 활용**: 거리 계산, 차이값 계산, 음수 처리 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function abs(n) {
+    return n < 0 ? -n : n
+  }
+
+  // ✅ Math.abs() 사용
+  Math.abs(-5) // 5
+  Math.abs(5) // 5
+  Math.abs(0) // 0
+
+  // 실전 예시: 두 점 사이 거리 (절댓값)
+  function manhattanDistance(x1, y1, x2, y2) {
+    return Math.abs(x2 - x1) + Math.abs(y2 - y1)
+  }
+
+  // 실전 예시: 차이값 계산
+  function difference(a, b) {
+    return Math.abs(a - b)
+  }
+
+  // 실전 예시: 음수 방지
+  function ensurePositive(n) {
+    return Math.abs(n)
+  }
+
+  // 실전 예시: 배열 요소 차이의 최대값
+  function maxDifference(arr) {
+    return Math.max(...arr) - Math.min(...arr)
+  }
+  ```
+
+  - **주의점**:
+    - `Math.abs(-0)`은 `0`을 반환합니다 (부호 있는 0 처리).
+    - `NaN`을 입력하면 `NaN`을 반환합니다.
+  - **개선점**: 절댓값 계산이 간단하고 명확합니다.
+
+- **Set을 활용한 중복 제거**
+  - **설명**: Set 자료구조를 사용하여 배열의 중복을 제거합니다.
+  - **알고리즘 활용**: 중복 체크, 유니크 값 추출, 집합 연산 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function removeDuplicates(arr) {
+    const seen = {}
+    const result = []
+    for (const item of arr) {
+      if (!seen[item]) {
+        seen[item] = true
+        result.push(item)
+      }
+    }
+    return result
+  }
+
+  // ✅ Set 사용
+  const arr = [1, 2, 2, 3, 3, 3, 4]
+  const unique = [...new Set(arr)] // [1, 2, 3, 4]
+  const uniqueSet = new Set(arr) // Set {1, 2, 3, 4}
+
+  // 실전 예시: 중복 제거
+  function getUnique(arr) {
+    return [...new Set(arr)]
+  }
+
+  // 실전 예시: 중복 체크
+  function hasDuplicates(arr) {
+    return arr.length !== new Set(arr).size
+  }
+
+  // 실전 예시: 두 배열의 공통 요소
+  function intersection(arr1, arr2) {
+    const set2 = new Set(arr2)
+    return [...new Set(arr1)].filter((x) => set2.has(x))
+  }
+
+  // 실전 예시: 문자열 중복 제거
+  function uniqueChars(str) {
+    return [...new Set(str)].join('')
+  }
+  ```
+
+  - **주의점**:
+    - Set은 객체 참조를 기준으로 비교하므로, 객체 배열에서는 주의가 필요합니다.
+    - `NaN`은 Set에서도 중복으로 처리됩니다 (NaN === NaN은 false지만 Set에서는 하나만 저장).
+  - **개선점**: 중복 제거가 간결하고 성능도 좋습니다 (O(n) 시간 복잡도).
+
+- **`Map` 자료구조 활용**
+  - **설명**: 키-값 쌍을 저장하는 자료구조로, 객체보다 다양한 키 타입을 지원합니다.
+  - **알고리즘 활용**: 해시 맵, 빈도수 카운트, 캐싱 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 객체의 한계
+  const obj = {}
+  obj[1] = 'one' // 키가 문자열로 변환됨
+  obj[[1, 2]] = 'array' // '[1,2]'로 변환됨
+
+  // ✅ Map 사용
+  const map = new Map()
+  map.set(1, 'one')
+  map.set([1, 2], 'array') // 배열도 키로 사용 가능
+  map.set('key', 'value')
+  map.get(1) // 'one'
+  map.has(1) // true
+  map.size // 3
+
+  // 실전 예시: 빈도수 카운트
+  function countFrequency(arr) {
+    const freq = new Map()
+    for (const item of arr) {
+      freq.set(item, (freq.get(item) || 0) + 1)
+    }
+    return freq
+  }
+
+  // 실전 예시: 캐싱 (메모이제이션)
+  const cache = new Map()
+  function fibonacci(n) {
+    if (cache.has(n)) return cache.get(n)
+    const result = n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2)
+    cache.set(n, result)
+    return result
+  }
+
+  // 실전 예시: 그룹화
+  function groupBy(arr, keyFn) {
+    const map = new Map()
+    for (const item of arr) {
+      const key = keyFn(item)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(item)
+    }
+    return map
+  }
+
+  // 실전 예시: 순회
+  for (const [key, value] of map) {
+    console.log(key, value)
+  }
+  ```
+
+  - **주의점**:
+    - 객체와 달리 `size` 속성으로 크기를 바로 알 수 있습니다.
+    - 키로 `NaN`도 사용 가능하며, `NaN === NaN`은 false지만 Map에서는 같은 키로 처리됩니다.
+    - 객체보다 메모리 사용량이 약간 더 많을 수 있습니다.
+  - **개선점**: 다양한 키 타입 지원과 명확한 API로 해시 맵 구현에 최적입니다.
+
+- **`Object.keys()` / `Object.values()` / `Object.entries()`**
+  - **설명**: 객체의 키, 값, 키-값 쌍을 배열로 반환합니다.
+  - **알고리즘 활용**: 객체 순회, 해시 맵 변환, 객체 조작 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const obj = { a: 1, b: 2, c: 3 }
+  const keys = []
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      keys.push(key)
+    }
+  }
+
+  // ✅ Object 메서드 사용
+  const obj = { a: 1, b: 2, c: 3 }
+  const keys = Object.keys(obj) // ['a', 'b', 'c']
+  const values = Object.values(obj) // [1, 2, 3]
+  const entries = Object.entries(obj) // [['a', 1], ['b', 2], ['c', 3]]
+
+  // 실전 예시: 객체 순회
+  function sumValues(obj) {
+    return Object.values(obj).reduce((sum, val) => sum + val, 0)
+  }
+
+  // 실전 예시: 객체 필터링
+  function filterObject(obj, predicate) {
+    return Object.fromEntries(Object.entries(obj).filter(([k, v]) => predicate(k, v)))
+  }
+
+  // 실전 예시: 객체 변환
+  function invertObject(obj) {
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]))
+  }
+
+  // 실전 예시: 객체 크기
+  function objectSize(obj) {
+    return Object.keys(obj).length
+  }
+
+  // 실전 예시: 객체 병합
+  function mergeObjects(...objs) {
+    return Object.assign({}, ...objs)
+  }
+  ```
+
+  - **주의점**:
+    - `Object.keys()`는 열거 가능한 속성만 반환합니다.
+    - Symbol 키는 포함되지 않습니다 (Symbol 키는 `Object.getOwnPropertySymbols()` 사용).
+  - **개선점**: 객체를 배열처럼 다룰 수 있어 함수형 프로그래밍 스타일에 적합합니다.
+
+### 1.6 연산자
+
+- **스프레드 연산자 (`...`)**
+  - **설명**: 배열이나 객체를 펼쳐서 개별 요소로 확장합니다.
+  - **알고리즘 활용**: 배열 복사, 병합, 함수 인자 전달 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ 스프레드 연산자 사용
+  const arr1 = [1, 2, 3]
+  const arr2 = [4, 5, 6]
+  const merged = [...arr1, ...arr2] // [1, 2, 3, 4, 5, 6]
+  const copied = [...arr1] // [1, 2, 3] (얕은 복사)
+
+  // 실전 예시: 배열 복사
+  function copyArray(arr) {
+    return [...arr]
+  }
+
+  // 실전 예시: 배열 병합
+  function mergeArrays(...arrays) {
+    return [].concat(...arrays)
+  }
+
+  // 실전 예시: Math.max/min에 배열 전달
+  const max = Math.max(...arr) // arr의 최대값
+  const min = Math.min(...arr) // arr의 최소값
+
+  // 실전 예시: 객체 복사 및 병합
+  const obj1 = { a: 1, b: 2 }
+  const obj2 = { ...obj1, c: 3 } // { a: 1, b: 2, c: 3 }
+
+  // 실전 예시: 함수 인자 전달
+  function sum(a, b, c) {
+    return a + b + c
+  }
+  const nums = [1, 2, 3]
+  sum(...nums) // 6
+  ```
+
+  - **주의점**:
+    - 배열의 얕은 복사만 수행하므로, 중첩된 배열/객체는 참조가 복사됩니다.
+    - 객체 스프레드는 ES2018(ES9)부터 지원됩니다.
+  - **개선점**: 배열/객체 조작이 간결하고 함수형 프로그래밍 스타일에 적합합니다.
+
+- **디스트럭처링 (Destructuring)**
+  - **설명**: 배열이나 객체에서 값을 추출하여 변수에 할당합니다.
+  - **알고리즘 활용**: 변수 교환, 배열/객체 요소 추출, 함수 파라미터 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ 배열 디스트럭처링
+  const arr = [1, 2, 3]
+  const [first, second, third] = arr
+  const [a, , c] = arr // 두 번째 요소 건너뛰기
+  const [head, ...rest] = arr // 첫 요소와 나머지
+
+  // 실전 예시: 변수 교환
+  let a = 1,
+    b = 2
+  ;[a, b] = [b, a] // a=2, b=1 (임시 변수 불필요!)
+
+  // 실전 예시: 함수 반환값 분해
+  function getMinMax(arr) {
+    return [Math.min(...arr), Math.max(...arr)]
+  }
+  const [min, max] = getMinMax([1, 5, 3, 9, 2])
+
+  // ✅ 객체 디스트럭처링
+  const obj = { x: 1, y: 2, z: 3 }
+  const { x, y } = obj
+  const { x: xCoord, y: yCoord } = obj // 이름 변경
+
+  // 실전 예시: 함수 파라미터
+  function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
+    return Math.hypot(x2 - x1, y2 - y1)
+  }
+
+  // 실전 예시: 기본값 설정
+  const { name = 'Unknown', age = 0 } = user
+  ```
+
+  - **주의점**:
+    - 배열 디스트럭처링은 순서가 중요합니다.
+    - 객체 디스트럭처링은 속성 이름이 일치해야 합니다.
+    - 중첩된 구조도 디스트럭처링 가능합니다.
+  - **개선점**: 변수 할당이 간결하고 가독성이 좋습니다.
+
+- **나머지 연산자 (`%`) 활용**
+  - **설명**: 나눗셈의 나머지를 반환합니다.
+  - **알고리즘 활용**: 홀짝 판별, 순환 인덱스, 모듈러 연산 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ 나머지 연산자 활용
+  10 % 3 // 1
+  10 % 2 // 0 (짝수)
+  11 % 2 // 1 (홀수)
+
+  // 실전 예시: 홀짝 판별
+  function isEven(n) {
+    return n % 2 === 0
+  }
+
+  // 실전 예시: 순환 인덱스
+  function circularIndex(i, length) {
+    return i % length
+  }
+  const arr = [0, 1, 2, 3, 4]
+  arr[10 % arr.length] // 0 (10번째는 0번째와 같음)
+
+  // 실전 예시: 모듈러 연산 (큰 수 처리)
+  function modPow(base, exp, mod) {
+    let result = 1
+    base = base % mod
+    while (exp > 0) {
+      if (exp % 2 === 1) result = (result * base) % mod
+      exp = Math.floor(exp / 2)
+      base = (base * base) % mod
+    }
+    return result
+  }
+
+  // 실전 예시: 배수 체크
+  function isMultiple(n, divisor) {
+    return n % divisor === 0
+  }
+  ```
+
+  - **주의점**:
+    - 음수에 대한 나머지 연산 결과는 언어마다 다를 수 있지만, JavaScript에서는 피제수의 부호를 따릅니다.
+    - `-10 % 3`은 `-1`입니다 (Python과 다름).
+  - **개선점**: 순환 구조나 모듈러 연산이 필요한 알고리즘에서 필수적입니다.
+
+- **비트 연산자 (`<<`, `>>`, `&`, `|`, `^`)**
+  - **설명**: 비트 단위 연산을 수행합니다.
+  - **알고리즘 활용**: 빠른 곱셈/나눗셈, 플래그 관리, 집합 표현 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ 비트 연산자 활용
+  5 << 1 // 10 (2배, 5 * 2)
+  10 >> 1 // 5 (절반, 10 / 2)
+  5 & 3 // 1 (AND: 101 & 011 = 001)
+  5 | 3 // 7 (OR: 101 | 011 = 111)
+  5 ^ 3 // 6 (XOR: 101 ^ 011 = 110)
+
+  // 실전 예시: 빠른 2의 거듭제곱
+  function powerOfTwo(n) {
+    return 1 << n // 2^n
+  }
+
+  // 실전 예시: 집합 표현 (비트마스크)
+  const SET_A = 1 << 0 // 1 (0001)
+  const SET_B = 1 << 1 // 2 (0010)
+  const SET_C = 1 << 2 // 4 (0100)
+  const combined = SET_A | SET_C // 5 (0101, A와 C 포함)
+
+  // 실전 예시: 집합 포함 여부 체크
+  function hasSet(flags, set) {
+    return (flags & set) !== 0
+  }
+
+  // 실전 예시: 홀짝 판별 (빠른 방법)
+  function isOdd(n) {
+    return (n & 1) === 1
+  }
+
+  // 실전 예시: 2의 거듭제곱 체크
+  function isPowerOfTwo(n) {
+    return n > 0 && (n & (n - 1)) === 0
+  }
+  ```
+
+  - **주의점**:
+    - 비트 연산은 32비트 정수로 변환되어 수행됩니다.
+    - `>>>` (부호 없는 오른쪽 시프트)도 있지만 일반적으로는 `>>`를 사용합니다.
+    - 가독성이 떨어질 수 있으므로 주석을 추가하는 것이 좋습니다.
+  - **개선점**: 성능 최적화가 필요한 경우나 비트마스크를 사용한 집합 표현에 유용합니다.
+
+- **`String.prototype.slice()`**
+  - **설명**: 문자열의 일부를 추출합니다.
+  - **알고리즘 활용**: 부분 문자열 추출, 복사 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ slice() 사용
+  const str = 'hello world'
+  str.slice(0, 5) // 'hello'
+  str.slice(6) // 'world'
+  str.slice(-5) // 'world'
+  str.slice(0, -6) // 'hello'
+
+  // 실전 예시: 부분 문자열 추출
+  function getSubstring(str, start, end) {
+    return str.slice(start, end)
+  }
+
+  // 실전 예시: 마지막 N개 문자
+  function getLastNChars(str, n) {
+    return str.slice(-n)
+  }
+  ```
+
+  - **주의점**:
+    - `slice()`는 원본을 변경하지 않습니다.
+    - 음수 인덱스는 문자열 끝에서부터 계산됩니다.
+  - **개선점**: 문자열의 부분 추출이 간단하고 안전합니다.
+
+- **정규표현식 기본 활용**
+  - **설명**: 패턴 매칭을 위한 정규표현식의 기본 사용법입니다.
+  - **알고리즘 활용**: 문자열 검증, 패턴 매칭, 치환 등에 자주 사용됩니다.
+
+  ```javascript
+  // ✅ 정규표현식 기본 사용
+  const regex = /\d+/g // 숫자 하나 이상 (전역 검색)
+  const str = 'abc123def456'
+  str.match(regex) // ['123', '456']
+  regex.test(str) // true
+
+  // 실전 예시: 숫자 추출
+  function extractNumbers(str) {
+    return str.match(/\d+/g) || []
+  }
+
+  // 실전 예시: 이메일 검증
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  // 실전 예시: 숫자만 체크
+  function isNumeric(str) {
+    return /^\d+$/.test(str)
+  }
+
+  // 실전 예시: 알파벳만 체크
+  function isAlpha(str) {
+    return /^[a-zA-Z]+$/.test(str)
+  }
+
+  // 실전 예시: 공백 제거
+  function removeSpaces(str) {
+    return str.replace(/\s+/g, '')
+  }
+
+  // 실전 예시: 특수문자 제거
+  function removeSpecialChars(str) {
+    return str.replace(/[^a-zA-Z0-9]/g, '')
+  }
+
+  // 실전 예시: 패턴 매칭
+  function findPattern(str, pattern) {
+    const regex = new RegExp(pattern, 'g')
+    return str.match(regex) || []
+  }
+  ```
+
+  - **주의점**:
+    - `test()`는 boolean을 반환하고, `match()`는 배열을 반환합니다.
+    - 전역 플래그(`g`)를 사용하면 `match()`는 모든 매칭을 반환합니다.
+    - `^`는 시작, `$`는 끝을 의미합니다.
+  - **개선점**: 복잡한 문자열 패턴 검증이 간결하게 가능합니다.
+
+### 1.5 자료구조
+
+- **Set을 활용한 중복 제거**
+  - **설명**: 키-값 쌍을 저장하는 자료구조로, 객체보다 다양한 키 타입을 지원합니다.
+  - **알고리즘 활용**: 해시 맵, 빈도수 카운트, 캐싱 등에 자주 사용됩니다.
+
+  ```javascript
+  // ❌ 객체의 한계
+  const obj = {}
+  obj[1] = 'one' // 키가 문자열로 변환됨
+  obj[[1, 2]] = 'array' // '[1,2]'로 변환됨
+
+  // ✅ Map 사용
+  const map = new Map()
+  map.set(1, 'one')
+  map.set([1, 2], 'array') // 배열도 키로 사용 가능
+  map.set('key', 'value')
+  map.get(1) // 'one'
+  map.has(1) // true
+  map.size // 3
+
+  // 실전 예시: 빈도수 카운트
+  function countFrequency(arr) {
+    const freq = new Map()
+    for (const item of arr) {
+      freq.set(item, (freq.get(item) || 0) + 1)
+    }
+    return freq
+  }
+
+  // 실전 예시: 캐싱 (메모이제이션)
+  const cache = new Map()
+  function fibonacci(n) {
+    if (cache.has(n)) return cache.get(n)
+    const result = n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2)
+    cache.set(n, result)
+    return result
+  }
+
+  // 실전 예시: 그룹화
+  function groupBy(arr, keyFn) {
+    const map = new Map()
+    for (const item of arr) {
+      const key = keyFn(item)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(item)
+    }
+    return map
+  }
+
+  // 실전 예시: 순회
+  for (const [key, value] of map) {
+    console.log(key, value)
+  }
+  ```
+
+  - **주의점**:
+    - 객체와 달리 `size` 속성으로 크기를 바로 알 수 있습니다.
+    - 키로 `NaN`도 사용 가능하며, `NaN === NaN`은 false지만 Map에서는 같은 키로 처리됩니다.
+    - 객체보다 메모리 사용량이 약간 더 많을 수 있습니다.
+  - **개선점**: 다양한 키 타입 지원과 명확한 API로 해시 맵 구현에 최적입니다.
+
+### 1.7 기타
+
+- **Label (loop:)**
+  - **설명**: 중첩 반복문을 한 번에 `break` 하거나 `continue` 할 때 사용합니다.
+  - **알고리즘 활용**: 이중/삼중 루프에서 특정 조건 만족 시 모든 루프를 빠져나올 때 유용합니다.
+
+  ```javascript
+  // ❌ 기존 방식 (flag 변수 사용)
+  let found = false
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (condition) {
+        found = true
+        break
+      }
+    }
+    if (found) break
+  }
+
+  // ✅ Label 사용
+  outerLoop: for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (condition) {
+        break outerLoop // 모든 루프 종료
+      }
+    }
+  }
+
+  // 실전 예시: 2D 배열 탐색
+  function findIn2D(grid, target) {
+    searchLoop: for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        if (grid[i][j] === target) {
+          return [i, j]
+        }
+        if (grid[i][j] > target) {
+          break searchLoop // 정렬된 배열에서 조기 종료
+        }
+      }
+    }
+    return null
+  }
+
+  // 실전 예시: continue로 특정 루프 계속
+  outer: for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 10; j++) {
+      if (j === 5) {
+        continue outer // 외부 루프의 다음 반복으로
+      }
+    }
+  }
+  ```
+
+  - **주의점**:
+    - Label 이름은 식별자 규칙을 따라야 하며, 콜론(`:`)으로 끝나야 합니다.
+    - 남용하면 코드 가독성이 떨어질 수 있으므로 필요한 경우에만 사용합니다.
+  - **개선점**: flag 변수 없이 깔끔하게 중첩 루프를 제어할 수 있습니다.
+
+---
+
+## 2. ES2020 (ES11): 안전한 탐색과 큰 수 처리
+
+**Node.js 지원**: Node.js 14.0.0+ (2020년 4월)
+
+가장 범용적으로 사용되며, 런타임 에러를 방지하는 핵심 문법입니다.
+
+- **Optional Chaining (`?.`)**
+  - **설명**: `null` 또는 `undefined`일 수 있는 객체 속성에 안전하게 접근합니다.
+  - **알고리즘 활용**: 2차원 배열 탐색 시 인덱스 범위를 체크하는 번거로운 `if`문을 줄여줍니다. (`grid[r]?.[c]`)
+
+  ```javascript
+  // ❌ 기존 방식
+  function getValue(grid, r, c) {
+    if (grid && grid[r] && grid[r][c] !== undefined) {
+      return grid[r][c]
+    }
+    return null
+  }
+
+  // ✅ Optional Chaining 사용
+  function getValue(grid, r, c) {
+    return grid?.[r]?.[c] ?? null
+  }
+
+  // 실전 예시: 2D 배열 경로 탐색
+  const grid = [
+    [1, 2],
+    [3, 4],
+  ]
+  const value = grid?.[5]?.[2] // undefined (에러 없음)
+  ```
+
+  - **주의점**:
+    - `?.`는 `null`/`undefined`에서만 멈추고, `0`, `false`, `""` 같은 falsy 값에서는 계속 진행합니다.
+    - 메서드 호출 시 `obj.method?.()` 형태로 사용해야 합니다.
+  - **개선점**: 중첩된 객체 접근 시 가독성과 안전성이 크게 향상됩니다.
+
+- **Nullish Coalescing (`??`)**
+  - **설명**: 값이 `null`이나 `undefined`일 때만 기본값을 부여합니다.
+  - **알고리즘 활용**: `0`이나 `""`이 유효한 정답일 수 있는 문제에서 `||` 연산자의 부작용을 방지합니다.
+
+  ```javascript
+  // ❌ || 연산자의 문제점
+  const count = 0
+  const result = count || 10 // 10 (0은 falsy이므로)
+
+  // ✅ ?? 연산자 사용
+  const count = 0
+  const result = count ?? 10 // 0 (유효한 값으로 처리)
+
+  // 실전 예시: 배열 합계 계산
+  function sumArray(arr) {
+    return arr.reduce((acc, val) => acc + (val ?? 0), 0)
+  }
+
+  // 실전 예시: 기본값 설정
+  const userInput = getUserInput() ?? 'default'
+  const maxValue = findMax(nums) ?? -Infinity
+  ```
+
+  - **주의점**:
+    - `??`는 `null`과 `undefined`만 체크하므로, `0`, `false`, `""`는 유효한 값으로 처리됩니다.
+    - `||`와 혼용하지 않도록 주의 (연산자 우선순위 문제).
+  - **개선점**: 숫자 0이나 빈 문자열이 유효한 값인 경우에 정확한 기본값 처리가 가능합니다.
+
+- **BigInt (`n`)**
+  - **설명**: 정수 정밀도 제한($2^{53} - 1$)을 넘어선 숫자를 처리합니다.
+  - **알고리즘 활용**: 결과값이 매우 큰 조합(Combination)이나 피보나치 수열 계산 시 필수입니다.
+
+  ```javascript
+  // ❌ Number 타입의 한계
+  const maxSafe = Number.MAX_SAFE_INTEGER // 9007199254740991
+  const overflow = maxSafe + 1 // 정밀도 손실 발생 가능
+
+  // ✅ BigInt 사용
+  const bigNum = 9007199254740992n
+  const result = bigNum + 1n // 정확한 계산
+
+  // 실전 예시: 큰 수 피보나치
+  function fibonacciBigInt(n) {
+    if (n <= 1) return BigInt(n)
+    let a = 0n,
+      b = 1n
+    for (let i = 2; i <= n; i++) {
+      ;[a, b] = [b, a + b]
+    }
+    return b
+  }
+
+  // 실전 예시: 조합 계산 (nCr)
+  function combinationBigInt(n, r) {
+    if (r > n) return 0n
+    let result = 1n
+    for (let i = 0; i < r; i++) {
+      result = (result * BigInt(n - i)) / BigInt(i + 1)
+    }
+    return result
+  }
+  ```
+
+  - **주의점**:
+    - BigInt와 Number는 직접 연산할 수 없습니다. (`1n + 1` ❌, `1n + 1n` ✅)
+    - JSON.stringify()에서 BigInt는 에러가 발생하므로 문자열로 변환 필요.
+    - 비교 연산은 가능하지만 (`1n < 2` ✅), 일부 Math 메서드는 사용 불가.
+  - **개선점**: 매우 큰 정수 계산이 필요한 알고리즘 문제에서 정확한 결과를 보장합니다.
+
+- **`Number.MAX_SAFE_INTEGER`**
+  - **설명**: JavaScript에서 안전하게 표현할 수 있는 최대 정수 값 ($2^{53} - 1$)입니다.
+  - **알고리즘 활용**: 무한대 값 대신 사용하거나, 큰 수 계산 시 정밀도 한계를 확인할 때 사용합니다.
+
+  ```javascript
+  // ✅ 무한대 값 처리
+  const INF = Number.MAX_SAFE_INTEGER // 9007199254740991
+  const MIN_INF = Number.MIN_SAFE_INTEGER // -9007199254740991
+
+  // 실전 예시: 최단 경로 알고리즘
+  function dijkstra(graph, start) {
+    const dist = new Array(graph.length).fill(Number.MAX_SAFE_INTEGER)
+    dist[start] = 0
+    // ...
+  }
+
+  // 실전 예시: 최대값 초기화
+  function findMaxPath(grid) {
+    let maxPath = -Number.MAX_SAFE_INTEGER
+    // ...
+  }
+
+  // 실전 예시: 정밀도 체크
+  function isSafeNumber(n) {
+    return n <= Number.MAX_SAFE_INTEGER && n >= Number.MIN_SAFE_INTEGER
+  }
+  ```
+
+  - **주의점**:
+    - 이 값을 넘어서면 정밀도 손실이 발생할 수 있습니다.
+    - 더 큰 수가 필요하면 BigInt를 사용해야 합니다.
+  - **개선점**: 무한대를 표현할 때 `Infinity` 대신 사용하면 비교 연산이 더 안전합니다.
+
+---
+
+## 3. ES2021 (ES12): 문자열 정제와 가독성
+
+**Node.js 지원**: Node.js 15.0.0+ (2020년 10월)
+
+- **`String.prototype.replaceAll()`**
+  - **설명**: 정규식 없이 모든 일치 항목을 치환합니다.
+  - **알고리즘 활용**: 문자열 치환 및 전처리 문제에서 구현 속도를 높여줍니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function replaceAll(str, search, replace) {
+    return str.split(search).join(replace)
+  }
+  // 또는 정규식 사용
+  str.replace(/old/g, 'new')
+
+  // ✅ replaceAll 사용
+  const text = 'hello world hello'
+  const result = text.replaceAll('hello', 'hi') // "hi world hi"
+
+  // 실전 예시: 문자열 정제
+  function cleanString(str) {
+    return str.replaceAll(' ', '').replaceAll('\n', '').replaceAll('\t', '')
+  }
+
+  // 실전 예시: 패턴 치환
+  function maskPhone(phone) {
+    return phone.replaceAll(/\d(?=\d{4})/g, '*') // 마지막 4자리 제외 마스킹
+  }
+  ```
+
+  - **주의점**:
+    - 첫 번째 인자는 문자열이어야 하며, 정규식이 아닙니다.
+    - 대소문자를 구분하므로 필요시 `toLowerCase()`와 함께 사용.
+  - **개선점**: 정규식 없이 간단하게 모든 일치 항목을 치환할 수 있어 가독성이 향상됩니다.
+
+- **Numeric Separators (`_`)**
+  - **설명**: 큰 숫자에 언더바를 사용하여 자릿수를 구분합니다. (`1_000_000_000`)
+  - **알고리즘 활용**: `MAX_SAFE_INTEGER`나 큰 상수를 설정할 때 `0`의 개수를 실수하지 않게 해줍니다.
+
+  ```javascript
+  // ❌ 기존 방식 (가독성 저하)
+  const billion = 1000000000
+  const maxSafe = 9007199254740991
+
+  // ✅ Numeric Separators 사용
+  const billion = 1_000_000_000
+  const maxSafe = 9_007_199_254_740_991
+
+  // 실전 예시: 상수 정의
+  const MOD = 1_000_000_007 // 모듈러 연산 상수
+  const INF = 1_000_000_000_000 // 무한대 대체값
+  const MAX_N = 100_000 // 최대 입력 크기
+
+  // 다양한 진법에서도 사용 가능
+  const binary = 0b1010_0001
+  const hex = 0xff_ec_de_5e
+  ```
+
+  - **주의점**:
+    - 언더바는 숫자 값에 영향을 주지 않으며, 순수하게 가독성 향상용입니다.
+    - 숫자 시작이나 끝, 소수점 앞뒤에는 사용할 수 없습니다.
+  - **개선점**: 큰 숫자의 가독성이 크게 향상되어 실수를 줄일 수 있습니다.
+
+---
+
+## 4. ES2022 (ES13): 배열 접근의 혁신
+
+**Node.js 지원**: Node.js 16.9.0+ (2021년 9월)
+
+- **`Array.prototype.at(index)`**
+  - **설명**: 음수 인덱스를 지원합니다.
+  - **알고리즘 활용**: 스택(Stack)의 Top 요소를 확인하거나 배열 끝의 값을 참조할 때 `arr[arr.length - 1]` 대신 `arr.at(-1)`로 가독성을 높입니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const arr = [1, 2, 3, 4, 5]
+  const last = arr[arr.length - 1] // 5
+  const secondLast = arr[arr.length - 2] // 4
+
+  // ✅ at() 사용
+  const last = arr.at(-1) // 5
+  const secondLast = arr.at(-2) // 4
+  const first = arr.at(0) // 1 (양수 인덱스도 가능)
+
+  // 실전 예시: 스택 구현
+  class Stack {
+    constructor() {
+      this.items = []
+    }
+    push(item) {
+      this.items.push(item)
+    }
+    pop() {
+      return this.items.pop()
+    }
+    top() {
+      return this.items.at(-1)
+    } // 마지막 요소
+    isEmpty() {
+      return this.items.length === 0
+    }
+  }
+
+  // 실전 예시: 슬라이딩 윈도우
+  function findMaxInWindow(arr, k) {
+    const result = []
+    for (let i = k - 1; i < arr.length; i++) {
+      const window = arr.slice(i - k + 1, i + 1)
+      result.push(Math.max(...window))
+    }
+    return result
+  }
+  ```
+
+  - **주의점**:
+    - 범위를 벗어난 인덱스는 `undefined`를 반환합니다 (`arr.at(100)` → `undefined`).
+    - 음수 인덱스는 배열 끝에서부터 계산됩니다 (`-1` = 마지막 요소).
+  - **개선점**: 배열 끝 요소 접근이 더 직관적이고 가독성이 향상됩니다.
+
+- **`Object.hasOwn()`**
+  - **설명**: `hasOwnProperty`의 안전한 정적 메서드 버전입니다.
+  - **알고리즘 활용**: 해시 맵 구현 시 프로토타입 체인의 간섭 없이 속성 존재 여부를 확인합니다.
+
+  ```javascript
+  // ❌ 기존 방식의 문제점
+  const obj = { a: 1 }
+  obj.hasOwnProperty('a') // true
+  // 하지만 hasOwnProperty가 오버라이드되면 문제 발생
+  const obj2 = Object.create(null)
+  obj2.hasOwnProperty('a') // TypeError!
+
+  // ✅ Object.hasOwn() 사용
+  const obj = { a: 1 }
+  Object.hasOwn(obj, 'a') // true
+  Object.hasOwn(obj, 'toString') // false (프로토타입 체인 무시)
+
+  // 실전 예시: 해시 맵 구현
+  class HashMap {
+    constructor() {
+      this.data = {}
+    }
+    set(key, value) {
+      this.data[key] = value
+    }
+    has(key) {
+      return Object.hasOwn(this.data, key)
+    }
+    get(key) {
+      return this.has(key) ? this.data[key] : undefined
+    }
+  }
+
+  // 실전 예시: 객체 속성 체크
+  function countProperties(obj) {
+    return Object.keys(obj).filter((key) => Object.hasOwn(obj, key)).length
+  }
+  ```
+
+  - **주의점**:
+    - 프로토타입 체인을 확인하지 않으므로, 상속된 속성은 `false`를 반환합니다.
+    - `Object.hasOwn()`은 정적 메서드이므로 객체 인스턴스에서 직접 호출할 수 없습니다.
+  - **개선점**: 프로토타입 체인 간섭 없이 안전하게 속성 존재 여부를 확인할 수 있습니다.
+
+- **`structuredClone()`** (전역 API)
+  - **설명**: 브라우저와 Node.js에서 공식 지원하는 깊은 복사(Deep Copy) 함수입니다.
+  - **알고리즘 활용**: 2차원 배열의 원본을 보존하며 DFS/BFS 탐색 상태를 넘길 때 최적입니다.
+
+  ```javascript
+  // ❌ 얕은 복사의 문제
+  const arr = [
+    [1, 2],
+    [3, 4],
+  ]
+  const shallow = [...arr]
+  shallow[0][0] = 999
+  console.log(arr[0][0]) // 999 (원본도 변경됨!)
+
+  // ❌ JSON 방식의 한계
+  const deep1 = JSON.parse(JSON.stringify(arr)) // 함수, undefined 등 복사 불가
+
+  // ✅ structuredClone() 사용
+  const arr = [
+    [1, 2],
+    [3, 4],
+  ]
+  const deep = structuredClone(arr)
+  deep[0][0] = 999
+  console.log(arr[0][0]) // 1 (원본 유지)
+
+  // 실전 예시: DFS/BFS 상태 복사
+  function dfs(grid, visited) {
+    const newVisited = structuredClone(visited)
+    // newVisited를 수정해도 원본 visited는 안전
+    // ...
+  }
+
+  // 실전 예시: 백트래킹
+  function backtrack(state, path) {
+    const newState = structuredClone(state)
+    const newPath = structuredClone(path)
+    // 상태 복원 없이 안전하게 탐색
+    // ...
+  }
+
+  // 실전 예시: 객체 깊은 복사
+  const complex = {
+    arr: [1, 2, { nested: true }],
+    map: new Map([['key', 'value']]),
+    set: new Set([1, 2, 3]),
+  }
+  const cloned = structuredClone(complex)
+  ```
+
+  - **주의점**:
+    - 함수, Symbol, DOM 노드 등은 복사할 수 없습니다.
+    - 순환 참조가 있으면 에러가 발생합니다.
+    - `Map`, `Set`, `Date` 등은 복사되지만 일부 타입은 제한적입니다.
+  - **개선점**: JSON 방식보다 훨씬 많은 타입을 지원하며, 원본 데이터를 안전하게 보존할 수 있습니다.
+
+---
+
+## 5. ES2023 (ES14): 불변성 배열 메서드
+
+**Node.js 지원**: Node.js 20.0.0+ (2023년 4월)
+
+원본 데이터를 수정(Mutate)하지 않고 '가공된 새 배열'을 즉시 반환하여 사이드 이펙트를 방지합니다.
+
+- **`toSorted()`, `toReversed()`**
+  - **설명**: 원본을 유지하면서 정렬/반전된 새 배열을 반환합니다.
+  - **알고리즘 활용**: `const sorted = [...arr].sort()` 하던 과정을 `arr.toSorted()` 한 줄로 대체합니다.
+
+  ```javascript
+  // ❌ 기존 방식 (원본 변경)
+  const arr = [3, 1, 4, 1, 5]
+  const sorted = [...arr].sort() // 복사 후 정렬
+  arr.sort() // 원본도 변경됨!
+
+  // ✅ toSorted() 사용
+  const arr = [3, 1, 4, 1, 5]
+  const sorted = arr.toSorted() // [1, 1, 3, 4, 5]
+  const reversed = arr.toReversed() // [5, 1, 4, 1, 3]
+  console.log(arr) // [3, 1, 4, 1, 5] (원본 유지)
+
+  // 실전 예시: 정렬된 배열 생성
+  function findKthLargest(nums, k) {
+    return nums.toSorted((a, b) => b - a)[k - 1]
+  }
+
+  // 실전 예시: 역순 처리
+  function reverseWords(s) {
+    return s.split(' ').toReversed().join(' ')
+  }
+
+  // 실전 예시: 불변성 유지
+  function processData(data) {
+    const sorted = data.toSorted()
+    const processed = sorted.map((x) => x * 2)
+    return { original: data, processed } // 원본 보존
+  }
+  ```
+
+  - **주의점**:
+    - `toSorted()`는 비교 함수를 인자로 받을 수 있습니다 (`arr.toSorted((a, b) => a - b)`).
+    - 원본 배열은 절대 변경되지 않으므로, 메모리 사용량이 증가할 수 있습니다.
+  - **개선점**: 불변성을 보장하면서 코드가 더 간결해지고, 실수로 원본을 변경하는 버그를 방지합니다.
+
+- **`with(index, value)`**
+  - **설명**: 특정 인덱스만 수정된 새 배열을 반환합니다.
+  - **알고리즘 활용**: 특정 노드만 방문 표시하거나 값을 바꾼 상태의 배열을 다음 재귀 함수로 전달할 때 유용합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const arr = [1, 2, 3, 4, 5]
+  const newArr = [...arr]
+  newArr[2] = 999 // 여러 줄 필요
+
+  // ✅ with() 사용
+  const arr = [1, 2, 3, 4, 5]
+  const newArr = arr.with(2, 999) // [1, 2, 999, 4, 5]
+  console.log(arr) // [1, 2, 3, 4, 5] (원본 유지)
+
+  // 실전 예시: 백트래킹
+  function backtrack(nums, visited, path) {
+    if (path.length === nums.length) {
+      return [path]
+    }
+    const results = []
+    for (let i = 0; i < nums.length; i++) {
+      if (!visited[i]) {
+        const newVisited = visited.with(i, true)
+        const newPath = [...path, nums[i]]
+        results.push(...backtrack(nums, newVisited, newPath))
+      }
+    }
+    return results
+  }
+
+  // 실전 예시: 상태 업데이트
+  function updateState(state, index, value) {
+    return state.with(index, value)
+  }
+
+  // 실전 예시: 불변성 유지하며 수정
+  function markVisited(grid, row, col) {
+    return grid.with(row, grid[row].with(col, true))
+  }
+  ```
+
+  - **주의점**:
+    - 음수 인덱스는 지원하지 않습니다 (`arr.with(-1, 0)` ❌).
+    - 범위를 벗어난 인덱스는 에러를 발생시킵니다.
+    - 단일 인덱스만 수정 가능하므로, 여러 인덱스를 수정하려면 체이닝이 필요합니다.
+  - **개선점**: 불변성을 유지하면서 특정 인덱스만 수정하는 것이 간결해집니다.
+
+- **`findLast()`, `findLastIndex()`**
+  - **설명**: 배열의 끝에서부터 요소를 탐색합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const arr = [1, 2, 3, 4, 3, 5]
+  let lastIndex = -1
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] === 3) {
+      lastIndex = i
+      break
+    }
+  }
+
+  // ✅ findLast(), findLastIndex() 사용
+  const arr = [1, 2, 3, 4, 3, 5]
+  const lastThree = arr.findLast((x) => x === 3) // 3
+  const lastIndex = arr.findLastIndex((x) => x === 3) // 4
+
+  // 실전 예시: 마지막 조건 만족 요소 찾기
+  function findLastEven(nums) {
+    return nums.findLast((n) => n % 2 === 0)
+  }
+
+  // 실전 예시: 패턴 매칭
+  function findLastMatch(str, pattern) {
+    const chars = str.split('')
+    const index = chars.findLastIndex((c) => pattern.test(c))
+    return index !== -1 ? chars[index] : null
+  }
+
+  // 실전 예시: 스택에서 특정 값 찾기
+  class Stack {
+    findLast(predicate) {
+      return this.items.findLast(predicate)
+    }
+  }
+  ```
+
+  - **주의점**:
+    - 조건을 만족하는 요소가 없으면 `findLast()`는 `undefined`, `findLastIndex()`는 `-1`을 반환합니다.
+    - `find()`와 동일한 콜백 함수 시그니처를 사용합니다.
+  - **개선점**: 배열 끝에서부터 탐색이 필요한 경우 코드가 훨씬 간결해집니다.
+
+- **`toSpliced()`**
+  - **설명**: 원본을 바꾸지 않으면서 요소를 삭제하거나 추가한 새 배열을 반환합니다.
+  - **알고리즘 활용**: `splice()`의 불변성 버전으로, 배열의 특정 부분을 수정하면서 원본을 보존할 때 사용합니다.
+
+  ```javascript
+  // ❌ 기존 방식 (원본 변경)
+  const arr = [1, 2, 3, 4, 5]
+  const newArr = [...arr]
+  newArr.splice(2, 1, 999) // 원본 복사 후 수정
+
+  // ✅ toSpliced() 사용
+  const arr = [1, 2, 3, 4, 5]
+  const newArr = arr.toSpliced(2, 1, 999) // [1, 2, 999, 4, 5]
+  console.log(arr) // [1, 2, 3, 4, 5] (원본 유지)
+
+  // 실전 예시: 요소 삭제
+  function removeElement(arr, index) {
+    return arr.toSpliced(index, 1)
+  }
+
+  // 실전 예시: 요소 추가
+  function insertElement(arr, index, value) {
+    return arr.toSpliced(index, 0, value)
+  }
+
+  // 실전 예시: 요소 교체
+  function replaceElement(arr, index, value) {
+    return arr.toSpliced(index, 1, value)
+  }
+
+  // 실전 예시: 여러 요소 교체
+  function replaceRange(arr, start, deleteCount, ...items) {
+    return arr.toSpliced(start, deleteCount, ...items)
+  }
+  ```
+
+  - **주의점**:
+    - `splice(start, deleteCount, ...items)`와 동일한 시그니처를 사용합니다.
+    - 음수 인덱스는 지원하지 않습니다.
+    - 원본 배열은 절대 변경되지 않습니다.
+  - **개선점**: 불변성을 유지하면서 배열을 수정할 수 있어 버그를 방지합니다.
+
+---
+
+## 6. ES2024 (ES15): 데이터 그룹화 및 집합 연산
+
+**Node.js 지원**: Node.js 22.0.0+ (2024년 4월)
+
+- **`Object.groupBy(iterable, callback)`**
+  - **설명**: 배열의 요소를 특정 기준에 따라 객체로 그룹화합니다.
+  - **알고리즘 활용**: 해시(Hash) 카테고리 분류 문제를 `reduce` 없이 한 줄로 해결합니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  const people = [
+    { name: 'Alice', age: 25 },
+    { name: 'Bob', age: 30 },
+    { name: 'Charlie', age: 25 },
+  ]
+  const grouped = people.reduce((acc, person) => {
+    const key = person.age
+    if (!acc[key]) acc[key] = []
+    acc[key].push(person)
+    return acc
+  }, {})
+
+  // ✅ Object.groupBy() 사용
+  const people = [
+    { name: 'Alice', age: 25 },
+    { name: 'Bob', age: 30 },
+    { name: 'Charlie', age: 25 },
+  ]
+  const grouped = Object.groupBy(people, (person) => person.age)
+  // { 25: [{name: 'Alice', age: 25}, {name: 'Charlie', age: 25}], 30: [{name: 'Bob', age: 30}] }
+
+  // 실전 예시: 카테고리별 그룹화
+  const products = [
+    { name: 'Laptop', category: 'Electronics' },
+    { name: 'Book', category: 'Education' },
+    { name: 'Phone', category: 'Electronics' },
+  ]
+  const byCategory = Object.groupBy(products, (p) => p.category)
+
+  // 실전 예시: 조건별 분류
+  const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  const byParity = Object.groupBy(numbers, (n) => (n % 2 === 0 ? 'even' : 'odd'))
+  // { even: [2, 4, 6, 8, 10], odd: [1, 3, 5, 7, 9] }
+
+  // 실전 예시: 문자열 길이별 그룹화
+  const words = ['apple', 'banana', 'cat', 'dog', 'elephant']
+  const byLength = Object.groupBy(words, (w) => w.length)
+  ```
+
+  - **주의점**:
+    - 콜백 함수가 반환하는 키는 문자열로 변환됩니다.
+    - `null`이나 `undefined`를 키로 반환하면 에러가 발생합니다.
+    - 결과 객체는 배열이므로 순서가 보장됩니다.
+  - **개선점**: `reduce`를 사용한 복잡한 그룹화 로직을 한 줄로 간결하게 표현할 수 있습니다.
+
+- **`Set.prototype` 집합 연산**
+  - **설명**: `intersection()`, `union()`, `difference()` 메서드가 추가되었습니다.
+  - **알고리즘 활용**: 두 집합 간의 공통 요소 찾기나 차집합 계산 시 직접 반복문을 돌릴 필요가 없습니다.
+
+  ```javascript
+  // ❌ 기존 방식
+  function intersection(setA, setB) {
+    const result = new Set()
+    for (const item of setA) {
+      if (setB.has(item)) {
+        result.add(item)
+      }
+    }
+    return result
+  }
+
+  function union(setA, setB) {
+    return new Set([...setA, ...setB])
+  }
+
+  function difference(setA, setB) {
+    const result = new Set()
+    for (const item of setA) {
+      if (!setB.has(item)) {
+        result.add(item)
+      }
+    }
+    return result
+  }
+
+  // ✅ Set 메서드 사용
+  const setA = new Set([1, 2, 3, 4])
+  const setB = new Set([3, 4, 5, 6])
+
+  const intersection = setA.intersection(setB) // Set {3, 4}
+  const union = setA.union(setB) // Set {1, 2, 3, 4, 5, 6}
+  const difference = setA.difference(setB) // Set {1, 2}
+  const symmetricDiff = setA.symmetricDifference(setB) // Set {1, 2, 5, 6}
+
+  // 실전 예시: 공통 요소 찾기
+  function findCommonElements(arr1, arr2) {
+    const set1 = new Set(arr1)
+    const set2 = new Set(arr2)
+    return Array.from(set1.intersection(set2))
+  }
+
+  // 실전 예시: 합집합 계산 (중복 제거)
+  function mergeArrays(arr1, arr2) {
+    return Array.from(new Set(arr1).union(new Set(arr2)))
+  }
+
+  // 실전 예시: 중복 제거 합집합 (간단한 방법)
+  function uniqueUnion(arr1, arr2) {
+    return [...new Set([...arr1, ...arr2])]
+  }
+
+  // 실전 예시: 차집합 계산
+  function removeElements(base, toRemove) {
+    return Array.from(new Set(base).difference(new Set(toRemove)))
+  }
+
+  // 실전 예시: 대칭 차집합 (한쪽에만 있는 요소)
+  function findUniqueElements(arr1, arr2) {
+    const set1 = new Set(arr1)
+    const set2 = new Set(arr2)
+    return Array.from(set1.symmetricDifference(set2))
+  }
+  ```
+
+  - **주의점**:
+    - 메서드는 새로운 Set을 반환하며 원본 Set은 변경되지 않습니다.
+    - `intersection()`, `union()`, `difference()`는 다른 Set을 인자로 받습니다.
+    - `symmetricDifference()`는 양쪽 집합에 각각만 있는 요소를 반환합니다.
+  - **개선점**: 집합 연산이 내장 메서드로 제공되어 코드가 간결하고 성능도 최적화됩니다.
+
+---
+
+## 💡 실전 코딩 테스트 환경 체크리스트
+
+### ECMAScript 버전별 Node.js 지원 현황
+
+| ECMAScript 버전 | 숫자 표기 | Node.js 최소 버전 | 주요 기능                                                           |
+| --------------- | --------- | ----------------- | ------------------------------------------------------------------- |
+| **ES2020**      | ES11      | Node.js 14.0.0+   | Optional Chaining (`?.`), Nullish Coalescing (`??`), BigInt         |
+| **ES2021**      | ES12      | Node.js 15.0.0+   | `replaceAll()`, Numeric Separators (`_`)                            |
+| **ES2022**      | ES13      | Node.js 16.9.0+   | `Array.at()`, `Object.hasOwn()`, `structuredClone()`                |
+| **ES2023**      | ES14      | Node.js 20.0.0+   | `toSorted()`, `toReversed()`, `with()`, `toSpliced()`, `findLast()` |
+| **ES2024**      | ES15      | Node.js 22.0.0+   | `Object.groupBy()`, `Set` 집합 연산                                 |
+
+### 🚀 코딩 테스트 플랫폼별 Node.js 지원 현황 (2024-25 업데이트)
+
+플랫폼별로 Node.js 버전과 지원하는 ECMAScript 버전이 다릅니다. **ES2023 문법을 지원하지 않는 플랫폼도 존재**하므로, 안전한 범용성을 위해 **ES2022까지의 문법을 사용하는 것을 권장**합니다.
+
+- **LeetCode**: Node.js 20.x (환경에 따라 ES2023 지원 여부 상이)
+- **Programmers**: Node.js 버전 확인 필요 (ES2022까지 안전)
+- **백준 (BOJ)**: Node.js 20.x (v20.12.2, ES2023 지원 여부 확인 필요)
+- **HackerRank**: Node.js 18.x ~ 20.x (환경에 따라 상이, ES2022까지 안전)
+- **기타 플랫폼**: 대부분 Node.js 18.x 이상이지만, ES2023 미지원 환경 존재
+
+**⚠️ 중요**: 플랫폼마다 Node.js 버전과 ECMAScript 지원 수준이 다르므로, **ES2023 문법(`toSorted()`, `toReversed()`, `with()` 등)은 사용 전 반드시 플랫폼 지원 여부를 확인**해야 합니다.
+
+---
+
+### 💡 코딩 테스트 최적화 문법 팁
+
+**1. 안전한 범용 문법 사용 (권장)**
+가장 안전한 범용성을 확보하려면 **ES2022까지의 문법**을 사용하는 것이 좋습니다:
+
+- `Optional Chaining` (`?.`), `Nullish Coalescing` (`??`) - ES2020
+- `BigInt`, `replaceAll()` - ES2020
+- `Array.at()`, `Object.hasOwn()`, `structuredClone()` - ES2022
+
+**2. ES2023 문법 사용 시 주의사항**
+`toSorted()`, `toReversed()`, `with()`, `toSpliced()`, `findLast()` 등 ES2023 문법은 플랫폼에 따라 지원되지 않을 수 있습니다. 사용 전 반드시 플랫폼의 Node.js 버전과 지원 여부를 확인하거나, 대체 방법을 준비해야 합니다.
+
+**3. 보수적 접근이 필요한 경우**
+기업 자체 채용 솔루션이나 업데이트가 느린 일부 플랫폼은 여전히 **Node.js 18.x (ES2022)** 환경인 경우가 있습니다. 가장 안전한 범용성을 확보하려면 **ES2022 문법을 마지노선**으로 잡는 것이 좋습니다.
+
+**3. 런타임 환경 확인법**
+플랫폼의 정확한 버전이 궁금하다면 코드 상단에 아래 명령어를 실행하여 직접 확인할 수 있습니다.
+
+```javascript
+console.log(process.version)
+```
