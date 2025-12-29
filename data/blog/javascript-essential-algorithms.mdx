@@ -1,0 +1,915 @@
+---
+title: '📚 JavaScript 알아두면 유용한 필수 알고리즘'
+date: '2025-12-29'
+tags: ['javascript']
+draft: false
+summary: '알아두면 유용한 필수 알고리즘; 최대공약수, 소수 판별, 이진 탐색, 투 포인터, Union-Find, 다익스트라 등 핵심 알고리즘을 포함합니다.'
+layout: PostWithTOC
+---
+
+## 1. 수학 관련 알고리즘
+
+### 1.1 최대공약수 (GCD) - 유클리드 호제법
+
+**시간 복잡도**: O(log min(a, b))
+
+```javascript
+// ✅ 재귀 버전 (가장 간결)
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b)
+}
+
+// ✅ 반복 버전 (스택 오버플로우 방지)
+function gcd(a, b) {
+  while (b !== 0) {
+    ;[a, b] = [b, a % b]
+  }
+  return a
+}
+
+// 실전 예시: 두 수의 최대공약수
+gcd(48, 18) // 6
+
+// 실전 예시: 여러 수의 최대공약수
+function gcdArray(arr) {
+  return arr.reduce((a, b) => gcd(a, b))
+}
+
+// 실전 예시: 분수 기약분수 만들기
+function simplifyFraction(numerator, denominator) {
+  const g = gcd(numerator, denominator)
+  return [numerator / g, denominator / g]
+}
+```
+
+**주의점**:
+
+- 음수 입력 시 절댓값을 취해야 합니다: `gcd(Math.abs(a), Math.abs(b))`
+- `a`와 `b` 중 하나가 0이면 다른 하나가 최대공약수입니다.
+
+### 1.2 최소공배수 (LCM)
+
+**시간 복잡도**: O(log min(a, b))
+
+```javascript
+// ✅ GCD를 이용한 LCM 계산
+function lcm(a, b) {
+  return (a * b) / gcd(a, b)
+}
+
+// 실전 예시: 두 수의 최소공배수
+lcm(12, 18) // 36
+
+// 실전 예시: 여러 수의 최소공배수
+function lcmArray(arr) {
+  return arr.reduce((a, b) => lcm(a, b))
+}
+
+// 실전 예시: 주기 찾기
+function findCommonPeriod(period1, period2) {
+  return lcm(period1, period2)
+}
+```
+
+**주의점**:
+
+- 큰 수의 곱셈 시 오버플로우를 방지하려면: `(a / gcd(a, b)) * b`
+- BigInt가 필요한 경우: `(BigInt(a) * BigInt(b)) / BigInt(gcd(a, b))`
+
+### 1.3 소수 판별
+
+**시간 복잡도**: O(√n)
+
+```javascript
+// ✅ 기본 소수 판별
+function isPrime(n) {
+  if (n < 2) return false
+  if (n === 2) return true
+  if (n % 2 === 0) return false
+
+  for (let i = 3; i * i <= n; i += 2) {
+    if (n % i === 0) return false
+  }
+  return true
+}
+
+// 실전 예시: 소수 체크
+isPrime(17) // true
+isPrime(15) // false
+```
+
+**주의점**:
+
+- 2는 유일한 짝수 소수이므로 별도 처리합니다.
+- `i * i <= n` 조건으로 √n까지만 확인합니다.
+
+### 1.4 에라토스테네스의 체
+
+**시간 복잡도**: O(n log log n)
+
+```javascript
+// ✅ 에라토스테네스의 체
+function sieveOfEratosthenes(n) {
+  const isPrime = Array(n + 1).fill(true)
+  isPrime[0] = isPrime[1] = false
+
+  for (let i = 2; i * i <= n; i++) {
+    if (isPrime[i]) {
+      for (let j = i * i; j <= n; j += i) {
+        isPrime[j] = false
+      }
+    }
+  }
+
+  return isPrime
+}
+
+// 실전 예시: n 이하의 모든 소수 반환
+function getPrimes(n) {
+  const isPrime = sieveOfEratosthenes(n)
+  return isPrime.map((prime, i) => (prime ? i : null)).filter((x) => x !== null)
+}
+
+// 실전 예시: 소수 개수 세기
+function countPrimes(n) {
+  const isPrime = sieveOfEratosthenes(n)
+  return isPrime.filter((x) => x).length
+}
+
+// 실전 예시: 소인수분해
+function primeFactors(n) {
+  const isPrime = sieveOfEratosthenes(n)
+  const factors = []
+
+  for (let i = 2; i * i <= n; i++) {
+    if (isPrime[i] && n % i === 0) {
+      while (n % i === 0) {
+        factors.push(i)
+        n /= i
+      }
+    }
+  }
+
+  if (n > 1) factors.push(n)
+  return factors
+}
+```
+
+**주의점**:
+
+- `i * i <= n`까지만 확인하면 충분합니다.
+- `j`는 `i * i`부터 시작하여 중복 체크를 방지합니다.
+
+### 1.5 등차수열 (Arithmetic Sequence)
+
+**등차수열**은 연속하는 두 항의 차이가 일정한 수열입니다. 첫 번째 항을 $a_1$, 공차(common difference)를 $d$라고 할 때:
+
+- **일반항**: $a_n = a_1 + (n-1) \cdot d$
+- **합 공식**: $S_n = \frac{n}{2} \cdot (2a_1 + (n-1)d) = \frac{n}{2} \cdot (a_1 + a_n)$
+
+합 공식은 첫 항과 마지막 항의 평균에 항의 개수를 곱한 것과 같습니다. 예를 들어, $3, 8, 13, 18$의 합은 $\frac{4}{2} \cdot (3 + 18) = 42$입니다.
+
+**시간 복잡도**: O(1)
+
+```javascript
+// ✅ 등차수열 합 구하기
+function arithmeticSum(firstTerm, commonDiff, n) {
+  // S_n = n/2 * (2a_1 + (n-1)d)
+  return (n * (2 * firstTerm + (n - 1) * commonDiff)) / 2
+}
+
+// ✅ 첫 항과 마지막 항으로 합 구하기 (더 효율적)
+function arithmeticSumWithLastTerm(firstTerm, lastTerm, n) {
+  // S_n = n/2 * (a_1 + a_n)
+  return (n * (firstTerm + lastTerm)) / 2
+}
+
+// 실전 예시: 합 계산
+arithmeticSum(3, 5, 4) // 4/2 * (2*3 + (4-1)*5) = 2 * (6 + 15) = 42
+arithmeticSumWithLastTerm(3, 18, 4) // 4/2 * (3 + 18) = 2 * 21 = 42
+```
+
+**주의점**:
+
+- 공차(d)가 0이면 모든 항이 같은 상수 수열입니다.
+- 합 공식에서 나눗셈 시 정수 나눗셈 주의 (BigInt 필요 시 사용).
+- 음수 공차도 가능합니다 (감소하는 등차수열).
+
+### 1.6 등비수열 (Geometric Sequence)
+
+**등비수열**은 연속하는 두 항의 비가 일정한 수열입니다. 첫 번째 항을 $a_1$, 공비(common ratio)를 $r$라고 할 때:
+
+- **일반항**: $a_n = a_1 \cdot r^{n-1}$
+- **합 공식**: $S_n = a_1 \cdot \frac{r^n - 1}{r - 1}$ (단, $r \neq 1$)
+- **공비가 1인 경우**: $S_n = a_1 \cdot n$ (모든 항이 같음)
+- **무한 등비수열 합** ($|r| < 1$일 때): $S = \frac{a_1}{1 - r}$
+
+등비수열의 합을 구할 때는 $r^n$을 계산해야 하므로, 빠른 거듭제곱 알고리즘을 사용하여 O(log n) 시간에 계산합니다.
+
+**시간 복잡도**: O(log n) (거듭제곱 계산 포함)
+
+```javascript
+// ✅ 빠른 거듭제곱 (Binary Exponentiation)
+function power(base, exp) {
+  if (exp === 0) return 1
+  if (exp === 1) return base
+
+  let result = 1
+  let current = base
+  let remaining = exp
+
+  while (remaining > 0) {
+    if (remaining % 2 === 1) {
+      result *= current
+    }
+    current *= current
+    remaining = Math.floor(remaining / 2)
+  }
+
+  return result
+}
+
+// ✅ 등비수열 합 구하기
+function geometricSum(firstTerm, commonRatio, n) {
+  if (commonRatio === 1) {
+    return firstTerm * n // 공비가 1이면 모든 항이 같음
+  }
+
+  // S_n = a_1 * (r^n - 1) / (r - 1)
+  const rn = power(commonRatio, n)
+  return (firstTerm * (rn - 1)) / (commonRatio - 1)
+}
+
+// ✅ 모듈러 거듭제곱 (큰 수 처리)
+function modPower(base, exp, mod) {
+  if (exp === 0) return 1
+  if (exp === 1) return base % mod
+
+  let result = 1n
+  let current = BigInt(base) % BigInt(mod)
+  let remaining = BigInt(exp)
+
+  while (remaining > 0n) {
+    if (remaining % 2n === 1n) {
+      result = (result * current) % BigInt(mod)
+    }
+    current = (current * current) % BigInt(mod)
+    remaining = remaining / 2n
+  }
+
+  return Number(result)
+}
+
+// ✅ 모듈러 연산과 함께 사용 (큰 수 처리)
+function geometricSumMod(firstTerm, commonRatio, n, mod) {
+  if (commonRatio === 1) {
+    return (firstTerm * n) % mod
+  }
+
+  const rn = modPower(commonRatio, n, mod)
+  const numerator = (firstTerm * (rn - 1 + mod)) % mod // 음수 방지
+  const denominator = (commonRatio - 1 + mod) % mod // 음수 방지
+
+  // 모듈러 역원을 사용한 나눗셈 (페르마의 소정리: mod가 소수일 때)
+  // (a / b) mod p = (a * b^(p-2)) mod p
+  const invDenominator = modPower(denominator, mod - 2, mod)
+  return (numerator * invDenominator) % mod
+}
+
+// 실전 예시: 합 계산
+geometricSum(2, 3, 4) // 2 * (3^4 - 1) / (3 - 1) = 2 * (81 - 1) / 2 = 80
+```
+
+**주의점**:
+
+- 공비(r)가 1이면 모든 항이 같은 상수 수열이므로 $S_n = a_1 \cdot n$입니다.
+- 공비가 0이면 두 번째 항부터 모두 0입니다.
+- 합 공식에서 `r = 1`인 경우를 별도 처리해야 합니다.
+- 큰 수 계산 시 BigInt나 모듈러 연산을 사용합니다.
+- 무한 등비수열 합은 $|r| < 1$일 때만 수렴합니다.
+
+---
+
+## 2. 탐색 알고리즘
+
+### 2.1 이진 탐색 (Binary Search)
+
+**시간 복잡도**: O(log n)
+
+```javascript
+// ✅ 기본 이진 탐색 (정렬된 배열)
+function binarySearch(arr, target) {
+  let left = 0
+  let right = arr.length - 1
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+
+    if (arr[mid] === target) return mid
+    if (arr[mid] < target) left = mid + 1
+    else right = mid - 1
+  }
+
+  return -1 // 찾지 못함
+}
+
+// ✅ Lower Bound (target 이상의 첫 번째 위치)
+function lowerBound(arr, target) {
+  let left = 0
+  let right = arr.length
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2)
+    if (arr[mid] < target) left = mid + 1
+    else right = mid
+  }
+
+  return left
+}
+
+// ✅ Upper Bound (target 초과의 첫 번째 위치)
+function upperBound(arr, target) {
+  let left = 0
+  let right = arr.length
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2)
+    if (arr[mid] <= target) left = mid + 1
+    else right = mid
+  }
+
+  return left
+}
+
+// 실전 예시: 정렬된 배열에서 찾기
+binarySearch([1, 3, 5, 7, 9], 5) // 2
+
+// 실전 예시: 범위 찾기
+function findRange(arr, target) {
+  const lower = lowerBound(arr, target)
+  const upper = upperBound(arr, target)
+  return [lower, upper - 1] // [시작 인덱스, 끝 인덱스]
+}
+
+// 실전 예시: 파라메트릭 서치 (조건을 만족하는 최대/최소값)
+function parametricSearch(arr, condition) {
+  let left = 0
+  let right = arr.length - 1
+  let result = -1
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    if (condition(arr[mid])) {
+      result = mid
+      left = mid + 1 // 최대값 찾기
+    } else {
+      right = mid - 1
+    }
+  }
+
+  return result
+}
+```
+
+**주의점**:
+
+- 배열이 정렬되어 있어야 합니다.
+- `left <= right` vs `left < right` 조건에 따라 동작이 다릅니다.
+- 오버플로우 방지: `mid = left + Math.floor((right - left) / 2)`
+
+### 2.2 투 포인터 (Two Pointers)
+
+**시간 복잡도**: O(n)
+
+```javascript
+// ✅ 두 수의 합 찾기 (정렬된 배열)
+function twoSum(arr, target) {
+  let left = 0
+  let right = arr.length - 1
+
+  while (left < right) {
+    const sum = arr[left] + arr[right]
+    if (sum === target) return [left, right]
+    if (sum < target) left++
+    else right--
+  }
+
+  return null
+}
+
+// ✅ 세 수의 합 찾기
+function threeSum(arr, target) {
+  arr.sort((a, b) => a - b)
+  const result = []
+
+  for (let i = 0; i < arr.length - 2; i++) {
+    if (i > 0 && arr[i] === arr[i - 1]) continue // 중복 제거
+
+    let left = i + 1
+    let right = arr.length - 1
+
+    while (left < right) {
+      const sum = arr[i] + arr[left] + arr[right]
+      if (sum === target) {
+        result.push([arr[i], arr[left], arr[right]])
+        while (left < right && arr[left] === arr[left + 1]) left++
+        while (left < right && arr[right] === arr[right - 1]) right--
+        left++
+        right--
+      } else if (sum < target) left++
+      else right--
+    }
+  }
+
+  return result
+}
+
+// ✅ 최대 길이 부분 배열 (슬라이딩 윈도우와 유사)
+function maxLengthSubarray(arr, condition) {
+  let left = 0
+  let maxLen = 0
+
+  for (let right = 0; right < arr.length; right++) {
+    // 조건을 만족하지 않으면 left 이동
+    while (!condition(arr.slice(left, right + 1))) {
+      left++
+    }
+    maxLen = Math.max(maxLen, right - left + 1)
+  }
+
+  return maxLen
+}
+```
+
+**주의점**:
+
+- 배열이 정렬되어 있어야 효율적입니다.
+- 중복 제거가 필요한 경우 별도 처리합니다.
+
+### 2.3 슬라이딩 윈도우 (Sliding Window)
+
+**시간 복잡도**: O(n)
+
+```javascript
+// ✅ 고정 크기 윈도우
+function maxSumSubarray(arr, k) {
+  let windowSum = 0
+  let maxSum = -Infinity
+
+  // 초기 윈도우
+  for (let i = 0; i < k; i++) {
+    windowSum += arr[i]
+  }
+  maxSum = windowSum
+
+  // 윈도우 슬라이딩
+  for (let i = k; i < arr.length; i++) {
+    windowSum = windowSum - arr[i - k] + arr[i]
+    maxSum = Math.max(maxSum, windowSum)
+  }
+
+  return maxSum
+}
+
+// ✅ 가변 크기 윈도우 (최대 길이)
+function longestSubstringWithoutRepeating(s) {
+  const seen = new Map()
+  let left = 0
+  let maxLen = 0
+
+  for (let right = 0; right < s.length; right++) {
+    const char = s[right]
+
+    // 중복 문자 발견 시 left 이동
+    if (seen.has(char) && seen.get(char) >= left) {
+      left = seen.get(char) + 1
+    }
+
+    seen.set(char, right)
+    maxLen = Math.max(maxLen, right - left + 1)
+  }
+
+  return maxLen
+}
+
+// ✅ 최소 길이 부분 배열
+function minLengthSubarray(arr, target) {
+  let left = 0
+  let windowSum = 0
+  let minLen = Infinity
+
+  for (let right = 0; right < arr.length; right++) {
+    windowSum += arr[right]
+
+    while (windowSum >= target) {
+      minLen = Math.min(minLen, right - left + 1)
+      windowSum -= arr[left]
+      left++
+    }
+  }
+
+  return minLen === Infinity ? 0 : minLen
+}
+```
+
+**주의점**:
+
+- 윈도우 크기가 고정인지 가변인지에 따라 구현이 다릅니다.
+- 중복 체크는 `Set` 또는 `Map`을 사용합니다.
+
+---
+
+## 3. 그래프 알고리즘
+
+### 3.1 Union-Find (Disjoint Set)
+
+**시간 복잡도**: 거의 O(1) (경로 압축 + 랭크 최적화)
+
+```javascript
+class UnionFind {
+  constructor(n) {
+    this.parent = Array.from({ length: n }, (_, i) => i)
+    this.rank = Array(n).fill(0)
+  }
+
+  // 경로 압축을 사용한 find
+  find(x) {
+    if (this.parent[x] !== x) {
+      this.parent[x] = this.find(this.parent[x]) // 경로 압축
+    }
+    return this.parent[x]
+  }
+
+  // 랭크를 사용한 union
+  union(x, y) {
+    const rootX = this.find(x)
+    const rootY = this.find(y)
+
+    if (rootX === rootY) return false // 이미 같은 집합
+
+    // 랭크가 작은 트리를 큰 트리에 연결
+    if (this.rank[rootX] < this.rank[rootY]) {
+      this.parent[rootX] = rootY
+    } else if (this.rank[rootX] > this.rank[rootY]) {
+      this.parent[rootY] = rootX
+    } else {
+      this.parent[rootY] = rootX
+      this.rank[rootX]++
+    }
+
+    return true
+  }
+
+  // 같은 집합인지 확인
+  connected(x, y) {
+    return this.find(x) === this.find(y)
+  }
+}
+
+// 실전 예시: 연결 요소 개수 찾기
+function countComponents(n, edges) {
+  const uf = new UnionFind(n)
+  for (const [u, v] of edges) {
+    uf.union(u, v)
+  }
+
+  const roots = new Set()
+  for (let i = 0; i < n; i++) {
+    roots.add(uf.find(i))
+  }
+  return roots.size
+}
+```
+
+**주의점**:
+
+- 경로 압축과 랭크 최적화를 모두 사용해야 효율적입니다.
+- `find`에서 재귀 호출 시 경로 압축이 자동으로 수행됩니다.
+
+### 3.2 다익스트라 알고리즘 (Dijkstra)
+
+**시간 복잡도**: O((V + E) log V) (우선순위 큐 사용)
+
+```javascript
+// ✅ 다익스트라 알고리즘
+function dijkstra(graph, start) {
+  const n = graph.length
+  const dist = Array(n).fill(Infinity)
+  const visited = Array(n).fill(false)
+  dist[start] = 0
+
+  // 우선순위 큐: [거리, 노드]
+  const pq = [[0, start]]
+
+  while (pq.length > 0) {
+    // 최소 거리 노드 선택
+    pq.sort((a, b) => a[0] - b[0])
+    const [d, u] = pq.shift()
+
+    if (visited[u]) continue
+    visited[u] = true
+
+    // 인접 노드 업데이트
+    for (const [v, weight] of graph[u]) {
+      if (!visited[v] && dist[u] + weight < dist[v]) {
+        dist[v] = dist[u] + weight
+        pq.push([dist[v], v])
+      }
+    }
+  }
+
+  return dist
+}
+
+// ✅ 인접 리스트 그래프 예시
+// graph[i] = [[노드, 가중치], ...]
+const graph = [
+  [
+    [1, 4],
+    [2, 1],
+  ], // 0번 노드: 1번(가중치 4), 2번(가중치 1)
+  [[3, 2]], // 1번 노드: 3번(가중치 2)
+  [
+    [1, 2],
+    [3, 5],
+  ], // 2번 노드: 1번(가중치 2), 3번(가중치 5)
+  [], // 3번 노드: 없음
+]
+
+// 실전 예시: 최단 경로 찾기
+const distances = dijkstra(graph, 0)
+// [0, 3, 1, 5] - 0번에서 각 노드까지의 최단 거리
+```
+
+**주의점**:
+
+- 음수 가중치가 있으면 사용할 수 없습니다 (벨만-포드 사용).
+- 실제로는 힙(Heap) 자료구조를 사용하는 것이 더 효율적입니다.
+- JavaScript에서는 배열 정렬로 대체할 수 있지만, 성능이 떨어집니다.
+
+### 3.3 플로이드-워셜 알고리즘 (Floyd-Warshall)
+
+**시간 복잡도**: O(V³)
+
+```javascript
+// ✅ 플로이드-워셜 알고리즘 (모든 쌍 최단 경로)
+function floydWarshall(graph) {
+  const n = graph.length
+  const dist = graph.map((row) => [...row]) // 복사
+
+  // 중간 노드를 통한 경로 업데이트
+  for (let k = 0; k < n; k++) {
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (dist[i][k] !== Infinity && dist[k][j] !== Infinity) {
+          dist[i][j] = Math.min(dist[i][j], dist[i][k] + dist[k][j])
+        }
+      }
+    }
+  }
+
+  return dist
+}
+
+// ✅ 인접 행렬 그래프 예시
+// graph[i][j] = i에서 j로 가는 가중치 (없으면 Infinity)
+const graph = [
+  [0, 4, 1, Infinity],
+  [Infinity, 0, Infinity, 2],
+  [Infinity, 2, 0, 5],
+  [Infinity, Infinity, Infinity, 0],
+]
+
+// 실전 예시: 모든 쌍 최단 경로
+const allPairs = floydWarshall(graph)
+```
+
+**주의점**:
+
+- 음수 사이클이 있으면 감지할 수 있습니다 (`dist[i][i] < 0`).
+- 공간 복잡도가 O(V²)이므로 큰 그래프에서는 비효율적입니다.
+
+---
+
+## 4. 조합/순열
+
+### 4.1 조합 (Combination)
+
+**시간 복잡도**: O(C(n, r))
+
+```javascript
+// ✅ 조합 생성 (n개 중 r개 선택)
+function combinations(arr, r) {
+  const result = []
+
+  function backtrack(start, path) {
+    if (path.length === r) {
+      result.push([...path])
+      return
+    }
+
+    for (let i = start; i < arr.length; i++) {
+      path.push(arr[i])
+      backtrack(i + 1, path)
+      path.pop()
+    }
+  }
+
+  backtrack(0, [])
+  return result
+}
+
+// ✅ 조합 개수 계산 (nCr)
+function combinationCount(n, r) {
+  if (r > n || r < 0) return 0
+  if (r === 0 || r === n) return 1
+
+  let result = 1
+  for (let i = 0; i < r; i++) {
+    result = (result * (n - i)) / (i + 1)
+  }
+  return result
+}
+
+// 실전 예시: 5개 중 3개 선택
+combinations([1, 2, 3, 4, 5], 3)
+// [[1,2,3], [1,2,4], [1,2,5], [1,3,4], ...]
+```
+
+**주의점**:
+
+- 큰 수의 조합 계산 시 BigInt가 필요할 수 있습니다.
+- 중복이 있는 배열은 별도 처리합니다.
+
+### 4.2 순열 (Permutation)
+
+**시간 복잡도**: O(n!)
+
+```javascript
+// ✅ 순열 생성 (n개를 모두 나열)
+function permutations(arr) {
+  const result = []
+
+  function backtrack(path, used) {
+    if (path.length === arr.length) {
+      result.push([...path])
+      return
+    }
+
+    for (let i = 0; i < arr.length; i++) {
+      if (used[i]) continue
+
+      used[i] = true
+      path.push(arr[i])
+      backtrack(path, used)
+      path.pop()
+      used[i] = false
+    }
+  }
+
+  backtrack([], Array(arr.length).fill(false))
+  return result
+}
+
+// ✅ 순열 개수 계산 (n!)
+function permutationCount(n) {
+  let result = 1
+  for (let i = 2; i <= n; i++) {
+    result *= i
+  }
+  return result
+}
+
+// 실전 예시: 3개 순열
+permutations([1, 2, 3])
+// [[1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]]
+```
+
+**주의점**:
+
+- `n!`은 매우 빠르게 증가하므로 작은 n에만 사용 가능합니다.
+- 중복이 있는 배열은 별도 처리합니다.
+
+---
+
+## 5. 트리 순회
+
+### 5.1 DFS (깊이 우선 탐색)
+
+```javascript
+// ✅ 재귀 DFS
+function dfsRecursive(node, visited = new Set()) {
+  if (!node || visited.has(node)) return
+
+  visited.add(node)
+  // 노드 처리
+  console.log(node.val)
+
+  // 자식 노드 순회
+  for (const child of node.children) {
+    dfsRecursive(child, visited)
+  }
+}
+
+// ✅ 스택을 사용한 반복 DFS
+function dfsIterative(root) {
+  const stack = [root]
+  const visited = new Set()
+
+  while (stack.length > 0) {
+    const node = stack.pop()
+
+    if (!node || visited.has(node)) continue
+    visited.add(node)
+
+    // 노드 처리
+    console.log(node.val)
+
+    // 자식 노드를 역순으로 스택에 추가
+    for (let i = node.children.length - 1; i >= 0; i--) {
+      stack.push(node.children[i])
+    }
+  }
+}
+```
+
+### 5.2 BFS (너비 우선 탐색)
+
+```javascript
+// ✅ 큐를 사용한 BFS
+function bfs(root) {
+  const queue = [root]
+  const visited = new Set()
+
+  while (queue.length > 0) {
+    const node = queue.shift()
+
+    if (!node || visited.has(node)) continue
+    visited.add(node)
+
+    // 노드 처리
+    console.log(node.val)
+
+    // 자식 노드를 큐에 추가
+    for (const child of node.children) {
+      queue.push(child)
+    }
+  }
+}
+
+// ✅ 레벨별 BFS
+function bfsLevelOrder(root) {
+  if (!root) return []
+
+  const result = []
+  const queue = [root]
+
+  while (queue.length > 0) {
+    const levelSize = queue.length
+    const level = []
+
+    for (let i = 0; i < levelSize; i++) {
+      const node = queue.shift()
+      level.push(node.val)
+
+      for (const child of node.children) {
+        queue.push(child)
+      }
+    }
+
+    result.push(level)
+  }
+
+  return result
+}
+```
+
+---
+
+## 💡 실전 활용 팁
+
+### 1. 알고리즘 선택 가이드
+
+- **정렬된 배열에서 찾기**: 이진 탐색
+- **두 수의 합/차 찾기**: 투 포인터
+- **연속 부분 배열 최적화**: 슬라이딩 윈도우
+- **그래프 연결성**: Union-Find
+- **최단 경로 (단일 출발)**: 다익스트라
+- **최단 경로 (모든 쌍)**: 플로이드-워셜
+- **소수 관련**: 에라토스테네스의 체
+- **최대공약수/최소공배수**: 유클리드 호제법
+
+### 2. 최적화 팁
+
+- **BigInt 사용**: 큰 수 계산 시 (조합, 순열, 최소공배수)
+- **메모이제이션**: 반복 계산이 많은 경우 (피보나치, 조합)
+- **경로 압축**: Union-Find에서 필수
+- **조기 종료**: 조건 만족 시 즉시 반환
+
+### 3. 자주 실수하는 부분
+
+- 이진 탐색에서 `left <= right` vs `left < right` 구분
+- 투 포인터에서 중복 제거 처리
+- Union-Find에서 경로 압축 누락
+- 다익스트라에서 음수 가중치 처리 불가
+- 조합/순열에서 큰 수 오버플로우
