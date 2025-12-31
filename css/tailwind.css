@@ -7,7 +7,8 @@
 /* Core theme configuration */
 @theme {
   /* Font families */
-  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+  --font-sans:
+    var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Colors */
@@ -172,4 +173,69 @@ input:-webkit-autofill:focus {
 .linkicon {
   display: inline-block;
   vertical-align: middle;
+}
+
+/* Safari sticky 호환성 개선 */
+.safari-sticky-fix {
+  /* Safari에서 sticky가 작동하도록 -webkit- prefix 추가 */
+  position: -webkit-sticky;
+  position: sticky;
+
+  /* Safari에서 부모 요소의 overflow로 인한 문제 방지 */
+  /* 부모 요소에 overflow: visible이 필요함 */
+  will-change: transform;
+
+  /* Safari에서 높이 계산 문제 방지 */
+  min-height: 0;
+}
+
+/* TOC Sidebar Scrollbar Styling */
+.toc-sidebar-container::-webkit-scrollbar {
+  @apply w-1.5;
+}
+
+.toc-sidebar-container::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.toc-sidebar-container::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-gray-300 dark:bg-gray-600;
+}
+
+.toc-sidebar-container::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+.toc-sidebar ul {
+  @apply space-y-0;
+}
+
+.toc-sidebar li {
+  @apply list-none;
+}
+
+.toc-sidebar a {
+  @apply hover:text-primary-500 dark:hover:text-primary-400 text-gray-600 transition-all duration-200 dark:text-gray-400;
+  @apply relative block rounded-md px-1.5 py-0.5;
+  @apply hover:bg-gray-100 dark:hover:bg-gray-800;
+  @apply text-xs;
+}
+
+/* Active/Current section - 강조선 없이 스타일링 */
+.toc-sidebar a[aria-current='page'],
+.toc-sidebar a.active {
+  @apply text-primary-700 dark:text-primary-300 font-semibold;
+  @apply bg-primary-100 dark:bg-primary-900/40;
+  @apply shadow-sm;
+}
+
+.toc-sidebar ul ul {
+  @apply mt-0 ml-1;
+  @apply pl-1;
+}
+
+/* Nested active items */
+.toc-sidebar ul ul a[aria-current='page'],
+.toc-sidebar ul ul a.active {
+  @apply pl-1;
 }
