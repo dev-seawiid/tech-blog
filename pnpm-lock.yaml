@@ -23,6 +23,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.1.18)
+      '@wiid-get/design-system':
+        specifier: ^0.0.7
+        version: 0.0.7(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
       body-scroll-lock:
         specifier: ^4.0.0-beta.0
         version: 4.0.0-beta.0
@@ -2112,6 +2115,27 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
+
+  '@wiid-get/design-system@0.0.7':
+    resolution: {integrity: sha512-3Ksc2zmNtlckwlUQ1YyrrdZXt6BAqzRMfMG0eZDO9V6bwpiGFRwd0/Xuw0lumY5NF6S4EcQgt4VKi4bzrpU3NQ==}
+    peerDependencies:
+      '@react-three/drei': '>=10.0.0'
+      '@react-three/fiber': '>=9.0.0'
+      next: ^16.0.0
+      react: ^19.0.0
+      react-dom: ^19.0.0
+      react-github-calendar: ^5.0.0
+      tailwindcss: '>=3.3.0'
+      three: '>=0.180.0'
+    peerDependenciesMeta:
+      '@react-three/drei':
+        optional: true
+      '@react-three/fiber':
+        optional: true
+      react-github-calendar:
+        optional: true
+      three:
+        optional: true
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -4673,6 +4697,9 @@ packages:
   tabbable@6.3.0:
     resolution: {integrity: sha512-EIHvdY5bPLuWForiR/AN2Bxngzpuwn1is4asboytXtpTgsArc+WmSJKVLlhdh71u7jFcryDqB2A8lQvj78MkyQ==}
 
+  tailwind-merge@2.6.0:
+    resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
+
   tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
 
@@ -7100,6 +7127,15 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
+
+  '@wiid-get/design-system@0.0.7(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)':
+    dependencies:
+      clsx: 2.1.1
+      next: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      tailwind-merge: 2.6.0
+      tailwindcss: 4.1.18
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
@@ -10576,6 +10612,8 @@ snapshots:
       '@pkgr/core': 0.2.9
 
   tabbable@6.3.0: {}
+
+  tailwind-merge@2.6.0: {}
 
   tailwindcss@4.1.18: {}
 

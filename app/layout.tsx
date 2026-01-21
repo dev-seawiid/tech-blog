@@ -1,6 +1,7 @@
 import 'css/tailwind.css'
 import 'pliny/search/algolia.css'
 import 'remark-github-blockquote-alert/alert.css'
+import '@wiid-get/design-system/index.css'
 
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
