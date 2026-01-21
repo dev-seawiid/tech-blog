@@ -15,7 +15,11 @@ export default function TagFilter({ tagCounts }: TagFilterProps) {
   const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a])
 
   // 현재 선택된 태그 확인
-  const currentTag = pathname.includes('/tags/') ? pathname.split('/tags/')[1]?.split('/')[0] : null
+  // pathname에서 태그를 추출하고 디코딩
+  const currentTagEncoded = pathname.includes('/tags/')
+    ? pathname.split('/tags/')[1]?.split('/')[0] || null
+    : null
+  const currentTagSlug = currentTagEncoded ? decodeURI(currentTagEncoded) : null
 
   return (
     <div className="pb-6">
@@ -39,11 +43,15 @@ export default function TagFilter({ tagCounts }: TagFilterProps) {
           {/* 태그 목록 */}
           <ul className="flex flex-wrap gap-2">
             {sortedTags.map((tag) => {
-              const isSelected = currentTag && slug(tag) === decodeURI(currentTag)
+              // 원본 태그를 slug로 변환하여 URL에 사용
+              const tagSlug = slug(tag)
+              const tagEncoded = encodeURI(tagSlug)
+              // slug로 비교하여 선택 상태 확인
+              const isSelected = currentTagSlug && currentTagSlug === tagSlug
               return (
                 <li key={tag}>
                   <Link
-                    href={`/tags/${slug(tag)}`}
+                    href={`/tags/${tagEncoded}`}
                     className={`px-3 py-2 text-sm font-medium uppercase ${
                       isSelected
                         ? 'text-primary-500 dark:text-primary-500 font-bold'
