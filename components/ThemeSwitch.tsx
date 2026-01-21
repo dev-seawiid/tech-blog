@@ -1,7 +1,5 @@
 'use client'
 
-import { Fragment, useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
 import {
   Menu,
   MenuButton,
@@ -11,6 +9,8 @@ import {
   RadioGroup,
   Transition,
 } from '@headlessui/react'
+import { useTheme } from 'next-themes'
+import { Fragment, useSyncExternalStore } from 'react'
 
 const Sun = () => (
   <svg
@@ -54,12 +54,31 @@ const Monitor = () => (
 )
 const Blank = () => <svg className="h-6 w-6" />
 
-const ThemeSwitch = () => {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme, resolvedTheme } = useTheme()
+// 클라이언트 마운트 상태를 추적하는 스토어
+const clientMountedStore = {
+  _mounted: false,
+  _listeners: new Set<() => void>(),
+  subscribe: (callback: () => void) => {
+    clientMountedStore._listeners.add(callback)
+    if (!clientMountedStore._mounted && typeof window !== 'undefined') {
+      clientMountedStore._mounted = true
+      clientMountedStore._listeners.forEach((listener) => listener())
+    }
+    return () => {
+      clientMountedStore._listeners.delete(callback)
+    }
+  },
+  getSnapshot: () => clientMountedStore._mounted,
+  getServerSnapshot: () => false,
+}
 
-  // When mounted on client, now we can show the UI
-  useEffect(() => setMounted(true), [])
+const ThemeSwitch = () => {
+  const mounted = useSyncExternalStore(
+    clientMountedStore.subscribe,
+    clientMountedStore.getSnapshot,
+    clientMountedStore.getServerSnapshot
+  )
+  const { theme, setTheme, resolvedTheme } = useTheme()
 
   return (
     <div className="flex items-center">

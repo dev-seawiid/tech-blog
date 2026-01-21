@@ -16,7 +16,6 @@ interface TOCSidebarProps {
 }
 
 export default function TOCSidebar({ toc }: TOCSidebarProps) {
-  const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
   const linksRef = useRef<NodeListOf<Element> | null>(null)
 
@@ -25,6 +24,18 @@ export default function TOCSidebar({ toc }: TOCSidebarProps) {
     () => toc.map((item) => item.url.replace('#', '')).filter(Boolean),
     [toc]
   )
+
+  // 초기 활성 ID 계산 (클라이언트에서만)
+  const getInitialActiveId = useCallback(() => {
+    if (typeof window === 'undefined') return ''
+    const hash = window.location.hash.replace('#', '')
+    return hash && headingIds.includes(hash) ? hash : headingIds[0] || ''
+  }, [headingIds])
+
+  const [activeId, setActiveId] = useState<string>(() => {
+    if (typeof window === 'undefined') return ''
+    return getInitialActiveId()
+  })
 
   // 활성 링크 업데이트 최적화
   const updateActiveLink = useCallback((id: string) => {
@@ -78,12 +89,7 @@ export default function TOCSidebar({ toc }: TOCSidebarProps) {
       if (element) observer.observe(element)
     })
 
-    // 초기 활성 상태 설정 (URL 해시 또는 첫 번째 섹션)
-    const hash = window.location.hash.replace('#', '')
-    const initialId = hash && headingIds.includes(hash) ? hash : headingIds[0] || ''
-    if (initialId) {
-      setActiveId(initialId)
-    }
+    // 초기 활성 상태는 useState 초기값으로 설정되므로 여기서는 설정하지 않음
 
     // 해시 변경 감지
     const handleHashChange = () => {

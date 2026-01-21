@@ -1,0 +1,15 @@
+# Next.js generated files
+next-env.d.ts
+**/next-env.d.ts
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Dependencies
+node_modules
+
+# Generated files
+.contentlayer
