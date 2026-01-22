@@ -24,8 +24,8 @@ importers:
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.1.18)
       '@wiid-get/design-system':
-        specifier: ^0.0.7
-        version: 0.0.7(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
+        specifier: ^0.0.10
+        version: 0.0.10(@radix-ui/react-slot@1.2.4(@types/react@19.2.8)(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
       body-scroll-lock:
         specifier: ^4.0.0-beta.0
         version: 4.0.0-beta.0
@@ -2116,9 +2116,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@wiid-get/design-system@0.0.7':
-    resolution: {integrity: sha512-3Ksc2zmNtlckwlUQ1YyrrdZXt6BAqzRMfMG0eZDO9V6bwpiGFRwd0/Xuw0lumY5NF6S4EcQgt4VKi4bzrpU3NQ==}
+  '@wiid-get/design-system@0.0.10':
+    resolution: {integrity: sha512-tl58Ew/iatHSCYjJJ2wfpTFbporaDWHiTdwNxea8rWHux2P4ypX9t4RgL68bRc3irZ98sAqoD+yq/XuNoS12HQ==}
     peerDependencies:
+      '@radix-ui/react-slot': ^1.0.0
       '@react-three/drei': '>=10.0.0'
       '@react-three/fiber': '>=9.0.0'
       next: ^16.0.0
@@ -7128,8 +7129,9 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@wiid-get/design-system@0.0.7(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)':
+  '@wiid-get/design-system@0.0.10(@radix-ui/react-slot@1.2.4(@types/react@19.2.8)(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)':
     dependencies:
+      '@radix-ui/react-slot': 1.2.4(@types/react@19.2.8)(react@19.2.3)
       clsx: 2.1.1
       next: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3

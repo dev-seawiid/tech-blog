@@ -1,8 +1,9 @@
 'use client'
 
-import siteMetadata from '@/data/siteMetadata'
 import { PostCard } from '@wiid-get/design-system'
 import type { Blog } from 'contentlayer/generated'
+import Image from 'next/image'
+import Link from 'next/link'
 import type { CoreContent } from 'pliny/utils/contentlayer'
 import { formatDate } from 'pliny/utils/formatDate'
 
@@ -27,14 +28,12 @@ export default function PostCardList({ posts }: PostCardListProps) {
         if (!imageUrl) {
           imageUrl = '/static/images/canada/mountains.jpg'
         }
-        // 상대 경로인 경우 siteUrl 추가
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = `${siteMetadata.siteUrl}${imageUrl}`
-        }
 
         // 날짜 형식: leohuynh.dev 스타일로 포맷 (예: "Jul 09, 2025")
         // PostCard는 영어 형식의 날짜를 기대하므로 영어 로케일 사용
         const formattedDate = formatDate(date, 'en-US')
+
+        const postHref = `/${path}`
 
         return (
           <li key={path}>
@@ -44,9 +43,24 @@ export default function PostCardList({ posts }: PostCardListProps) {
               date={formattedDate}
               readingTime={readingTimeMinutes}
               tags={tags}
-              href={`/${path}`}
-              image={imageUrl}
               variant="grid"
+              imageSlot={
+                <Link href={postHref} className="wg-w-full wg-h-full">
+                  <Image
+                    src={imageUrl}
+                    alt={title}
+                    width={600}
+                    height={400}
+                    className="wg-w-full wg-h-full wg-rounded-xl wg-shadow-2xl wg-object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
+                  />
+                </Link>
+              }
+              titleLinkSlot={<Link href={postHref}>{title}</Link>}
             />
           </li>
         )
