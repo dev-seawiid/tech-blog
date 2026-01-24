@@ -1,5 +1,3 @@
-'use client'
-
 import Image from '@/components/Image'
 import { PostCard } from '@wiid-get/design-system'
 import type { Blog } from 'contentlayer/generated'
@@ -52,11 +50,6 @@ export default function PostCardList({ posts }: PostCardListProps) {
                     width={600}
                     height={400}
                     className="wg-w-full wg-h-full wg-rounded-xl wg-shadow-2xl wg-object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                    }}
                   />
                 </Link>
               }
