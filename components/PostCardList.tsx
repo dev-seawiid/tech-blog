@@ -1,8 +1,8 @@
 'use client'
 
+import Image from '@/components/Image'
 import { PostCard } from '@wiid-get/design-system'
 import type { Blog } from 'contentlayer/generated'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { CoreContent } from 'pliny/utils/contentlayer'
 import { formatDate } from 'pliny/utils/formatDate'
