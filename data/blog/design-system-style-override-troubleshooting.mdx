@@ -1,0 +1,264 @@
+---
+title: '@wiid-get/design-system과 기술 블로그 스타일 충돌 해결 썰'
+date: '2026-01-28'
+tags: ['회고']
+draft: false
+summary: 'Tailwind CSS 기반 디자인 시스템을 npm 패키지로 배포할 때 겪은 스타일 충돌과 해결 과정을 공유합니다. base 이중 적용으로 블로그 테마 커스터마이징이 덮어써진 문제, components·utilities에 기본 Tailwind까지 포함되던 문제를 정리하고, v4(@theme·@source·단일 빌드)로 구조를 잡은 내용을 다룹니다.'
+layout: PostWithTOC
+---
+
+## 들어가며
+
+[`@wiid-get/design-system`](https://www.npmjs.com/package/@wiid-get/design-system)을 처음 npm에 배포했을 때, 사용자 프로젝트에 `import '@wiid-get/design-system/index.css'`만 추가했을 뿐인데 기존 스타일이 완전히 깨지는 현상을 경험했습니다.
+
+- 폰트 크기가 바뀌고
+- 버튼이 이상하게 보이고
+- 레이아웃이 무너지는
+
+"디자인 시스템 하나 추가했을 뿐인데, 왜 기존 프로젝트가 망가질까?"라는 의문에서 이 트러블슈팅이 시작되었습니다.
+
+---
+
+## 1. 문제: 무엇이 깨졌는가
+
+디자인 시스템 CSS를 import했을 때:
+
+1. **폰트/타이포그래피가 갑자기 바뀜** — 블로그의 기본 폰트 크기, 제목 스타일이 달라짐
+2. **버튼/리스트가 예상과 다르게 렌더링** — 테마 버튼·리스트가 리셋 스타일로 덮어씌워짐
+3. **레이아웃이 흐트러짐** — base 리셋이 다시 적용되면서 `*`의 margin·padding 등이 초기화되거나, 유틸리티·클래스가 중복 정의되어 로드 순서에 따라 예상과 다르게 적용됨
+
+(1·2는 base가 두 번 적용되며 나중 Preflight가 블로그 테마 커스터마이징을 덮어쓴 결과로 설명됩니다. 3은 base 리셋 재적용이나 유틸리티/클래스 중복·로드 순서 등이 겹치면서 발생했을 수 있습니다.)
+
+원인을 미리 요약하면, **스타일이 깨진 이유**는 base가 두 번 적용되면서 나중에 로드된 Preflight가 **tech-blog의 블로그 테마 커스터마이징**(`@layer base`의 버튼/링크 포커스, 타이포그래피 등)을 덮어썼기 때문이고, **성능·중복 문제**는 디자인 시스템이 components·utilities에 **커스텀만이 아니라 기본 Tailwind 스타일까지** 포함해 빌드하면서 생겼습니다.  
+즉, **디자인 시스템이 호스트 앱 스타일을 "침투"해 덮어쓰는** 형태로 동작하고 있었습니다.
+
+---
+
+## 2. Tailwind 기본 동작과 레이어·우선순위
+
+원인 분석에 들어가기 전에, Tailwind가 어떻게 동작하고 레이어·우선순위가 어떻게 정해지는지 정리합니다.
+
+### Tailwind는 어떻게 동작하는가?
+
+Tailwind는 **유틸리티 퍼스트(Utility-first)** 엔진입니다. 버튼/카드 같은 큰 단위를 먼저 정의하는 게 아니라, `px-4`, `mt-2`, `bg-blue-500`처럼 **작은 스타일 조각(유틸리티 클래스)**을 제공하고, 이를 조합해 UI를 만듭니다.
+
+Tailwind는 빌드 시점에 (1) 소스에서 사용된 클래스 토큰을 추출하고, (2) 테마 설정에 맞춰 (3) 실제 CSS 규칙을 생성합니다.
+
+### CSS 레이어와 우선순위
+
+CSS의 `@layer`는 스타일의 **우선순위를 명시적으로 제어**하는 기능입니다.
+
+- **레이어 간 우선순위**: `utilities` > `components` > `base` 순으로 정해집니다.
+- **같은 레이어 안에서는**: **나중에 로드된 규칙이 우선**합니다.
+- **레이어 밖의 스타일**: 레이어 안보다 항상 우선합니다.
+
+특이도(specificity)가 같아도 레이어 순서와 로드 순서에 따라 어떤 스타일이 이길지 정해집니다.
+
+### Tailwind가 쓰는 세 레이어
+
+| 레이어         | 역할                                                                    |
+| -------------- | ----------------------------------------------------------------------- |
+| **base**       | Preflight. `h1`, `button`, `ul` 등 태그에 대한 전역 리셋. **기본 포함** |
+| **components** | `.btn`, `.card` 같은 재사용 컴포넌트 스타일. **기본은 비어 있음**       |
+| **utilities**  | `px-4`, `bg-blue-500` 등 유틸리티 클래스. **사용된 것만 자동 생성**     |
+
+유틸리티는 `utilities` 레이어에서 생성되므로, 같은 특이도라도 컴포넌트·base보다 우선합니다.  
+이 글에서 말하는 “base가 두 번 적용되면 나중 것이 이긴다”는 이야기도, **같은 `@layer base` 안에서는 나중에 로드된 규칙이 우선**한다는 점을 전제로 합니다.
+
+---
+
+## 3. 원인 분석: 스타일 덮어쓰기와 성능·중복
+
+### 3-1. 스타일이 깨진 이유 — base가 두 번 적용되며 블로그 테마 커스터마이징이 덮어써짐
+
+Tailwind의 `@tailwind base`는 **Preflight**(전역 리셋)를 넣습니다. 디자인 시스템 CSS에도 base가 들어 있으면 **base가 두 번** 적용되고, 같은 `@layer base` 안에서는 **나중에 로드된 규칙이 우선**합니다.
+
+- **tech-blog(호스트)**는 Tailwind **v4**를 쓰고, `@import 'tailwindcss'`로 v4 base(Preflight)를 먼저 넣은 뒤, **블로그 테마용**으로 `@layer base`에서 `button`, `a`, `*` 등을 커스터마이징합니다.
+- **디자인 시스템**은 Tailwind **v3**로 빌드된 CSS를 배포하면서 그 안에 **v3의 base(Preflight)**를 포함하고 있었습니다.
+- v3·v4 Preflight는 개념적으로 같은 리셋이라 **스타일 차이** 자체가 문제는 아닙니다. 문제는 **base가 두 번 적용**된다는 점입니다.
+- 디자인 시스템 base가 **나중에** 로드되므로, **디자인 시스템이 넣은 Preflight가 tech-blog가 base 위에 올려놓은 블로그 테마 커스터마이징을 덮어씁니다.**
+
+**로드 순서와 우선순위 (코드로 보면)**
+
+문제가 발생했을 때는 **호스트 CSS(tailwind.css)를 먼저 로드하고, 그 다음에 디자인 시스템 CSS를 별도로 로드**하는 경우가 많습니다(예: layout에서 두 번 import). 그러면 `@layer base` 안에는 아래 순서로 쌓이고, 같은 레이어에서는 **나중에 나온 규칙이 우선**합니다.
+
+**1단계 — tech-blog: Tailwind 진입 + Preflight**
+
+`tailwind.css`(또는 진입 CSS)에서 `@import 'tailwindcss'`가 먼저 실행되면서 v4의 base(Preflight)가 `@layer base` 안에 들어갑니다.
+
+**2단계 — tech-blog: 블로그 테마 커스터마이징**
+
+같은 `tailwind.css` 안에서 그다음에 `@layer base { ... }`로 tech-blog만의 스타일을 올립니다. 1단계 Preflight 다음이므로, **같은 셀렉터에 대해 이 커스터마이징이 1단계보다 우선**합니다.
+
+```css
+/* css/tailwind.css — 1단계 Preflight 다음에 실행 */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  a,
+  button {
+    outline-color: var(--color-primary-500);
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid;
+    border-radius: var(--radius-sm);
+    outline-color: var(--color-primary-500);
+  }
+}
+```
+
+**3단계 — 디자인 시스템: Preflight가 다시 들어감 (문제 지점)**
+
+layout 등에서 **디자인 시스템 `index.css`를 tailwind.css 다음에** 로드하면(별도 link/import), 그 파일에 v3로 빌드된 **Preflight가 `@layer base` 안에** 들어 있으면 **2단계보다 나중**에 같은 레이어에 쌓입니다.  
+같은 `@layer base` 안에서는 나중이 이기므로, **디자인 시스템 Preflight가 tech-blog의 블로그 테마 커스터마이징(2단계)을 덮어씁니다.**
+
+(참고: 현재 tech-blog는 `tailwind.css` 한 파일 안에서 `@import`로 디자인 시스템을 부르므로, 빌드 결과상 tech-blog `@layer base`가 나중에 와서 덮어쓰기 문제는 없습니다. 문제가 됐던 건 layout에서 tailwind.css 다음에 디자인 시스템을 **별도로** 로드해 디자인 시스템 Preflight가 tech-blog 커스터마이징보다 나중에 쌓인 경우입니다.)
+
+```css
+/* 디자인 시스템 index.css 내용 (당시 v3 빌드) — 2단계보다 나중에 @layer base에 합쳐짐 */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    margin: 0;
+    padding: 0;
+    border: 0 solid; /* → tech-blog의 border-color 등이 동일 셀렉터에서 밀림 */
+  }
+
+  button,
+  input,
+  select,
+  optgroup,
+  textarea,
+  ::file-selector-button {
+    font: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+}
+```
+
+**정리: `@layer base` 안의 최종 순서**
+
+| 순서 | 출처          | 내용                                                                         |
+| ---- | ------------- | ---------------------------------------------------------------------------- |
+| 1    | tech-blog     | v4 Preflight (전역·폼 리셋)                                                  |
+| 2    | tech-blog     | 블로그 테마 커스터마이징 (`border-color`, `outline-color`, 포커스 스타일 등) |
+| 3    | 디자인 시스템 | v3 Preflight (전역·폼 리셋 다시 적용) → **같은 셀렉터는 여기서 덮어써짐**    |
+
+그래서 `button`, `*`, `h1`~`h6` 등에 대해 2단계에서 준 스타일이 3단계 Preflight에 의해 다시 리셋되고, 블로그 테마가 깨져 보이게 됩니다.
+
+Preflight는 `h1`~`h6`에 `font-size: inherit`, `font-weight: inherit`를 주므로, tech-blog가 base 위에서 의도한 타이포그래피(제목 스타일 등)도 같은 이유로 초기화될 수 있습니다.
+
+**Preflight 구조 참고**  
+Preflight는 `button { ... }` 한 블록이 아니라, 전역 리셋(`*`에 margin/padding/border)과 폼 요소 리셋(button, input, ...에 background-color: transparent 등)으로 나뉘어 있습니다.  
+실제 소스: [preflight.css](https://github.com/tailwindlabs/tailwindcss/blob/main/packages/tailwindcss/preflight.css)
+
+**base를 누가 넣을지**
+
+base(Preflight) 자체가 나쁜 것이 아니라, **base를 한 번만 적용하고 그 위의 커스터마이징을 지키려면 base를 호스트만 넣어야 한다**는 문제였습니다.  
+참고로 shadcn/ui는 컴포넌트 코드를 호스트 앱으로 복사하는 방식이라, 최종적으로 **호스트 안에 Tailwind 인스턴스가 하나**만 있어서 base 이중 적용 문제가 없습니다. 우리는 빌드된 CSS를 npm으로 배포하는 라이브러리라, 호스트 base와 라이브러리 base가 **동시에** 들어갔던 구조였습니다.
+
+### 3-2. 성능·중복 문제 — components/utilities에 기본 Tailwind 스타일까지 포함
+
+스타일이 “깨진” 것이 아니라 **번들 크기·중복** 쪽 문제였습니다.
+
+디자인 시스템이 배포하는 CSS에 **커스텀 스타일만** 들어있을 수 있었지만, 실제로는 **Tailwind 기본 유틸리티 전체**까지 포함해 빌드하고 있었습니다.
+
+- `@tailwind components` / `@tailwind utilities`를 넣으면, 설정에 따라 **기본 spacing, color, flex 등 전체 유틸리티 세트**가 생성될 수 있습니다(prefix `wg-`를 써도).
+- 그 결과 **커스텀 + 기본 Tailwind 유틸리티**가 한꺼번에 들어가고, 호스트도 Tailwind를 쓰면 같은 의미의 클래스가 두 군데에서 정의됩니다.
+- 번들 크기 증가, 로드 순서에 따른 예측 어려운 오버라이드가 생깁니다.
+
+### 3-3. 기타 — 같은 클래스명 충돌, Tailwind 엔진 두 번 실행
+
+- **클래스명 충돌**: prefix 없이 같은 이름(예: `.flex`)을 쓰면, 나중에 로드된 쪽이 이겨서 호스트 의도와 다르게 적용될 수 있습니다.
+- **엔진 두 번 실행**: 디자인 시스템이 `tailwindcss`를 `dependencies`에 두면, 호스트와 라이브러리에서 각각 Tailwind가 돌아 번들 증가·설정 충돌·우선순위 혼선이 생깁니다.
+
+---
+
+## 4. 해결: 어떻게 맞췄는가
+
+### 4-1. v3 시절 대응 — base 제거, prefix, import 순서, peerDependencies
+
+**base 제거**  
+배포용 CSS에서 `@tailwind base`를 제거하고 components·utilities만 빌드했습니다. 호스트가 이미 가진 base와 블로그 테마 커스터마이징을 건드리지 않고, 디자인 시스템의 컴포넌트/유틸리티만 추가하는 방식입니다.  
+(Storybook은 base가 필요하므로, 개발용 CSS와 배포용 CSS를 분리해 개발용만 base를 포함했습니다.)
+
+**prefix**  
+Tailwind 설정에 `prefix: 'wg-'`를 두어, 라이브러리에서 나오는 **모든 클래스**(유틸리티·컴포넌트)에 접두사를 붙였습니다. `flex` → `wg-flex`, `.btn` → `.wg-btn` 식으로 호스트 클래스와 이름 공간을 나눴습니다.
+
+**import 순서**  
+호스트 진입 CSS에서 `tailwind.css`(전역 테마)를 먼저, 그다음 `@wiid-get/design-system/index.css`를 로드하도록 했습니다. "호스트가 주인, 디자인 시스템은 그 위에 올라타는 계층"이라는 모델에 맞춥니다.
+
+**peerDependencies**  
+`tailwindcss`를 `dependencies`에서 빼고 `peerDependencies`로 옮기고, 번들에서 `external` 처리했습니다. 호스트의 Tailwind 엔진을 공유해 엔진이 두 번 도는 상황을 줄였습니다.
+
+**v3 시절의 트레이드오프**  
+커스텀 클래스만 주고 호스트가 `content`에 디자인 시스템 경로를 넣어 빌드하게 하면 더 깔끔하지만, "설치하고 import만 하면 끝"인 **사용성**을 우선해 빌드된 CSS 전체를 제공했습니다. 그 대신 prefix로 충돌은 막고, 중복·번들 크기는 감수하는 선택이었습니다.
+
+### 4-2. Tailwind v4로 업그레이드 — base·utilities 문제를 구조적으로 해소
+
+위 v3 시절 대응으로도 완화되지만, **Tailwind v4**로 디자인 시스템과 호스트를 모두 올리면 1차·2차 원인을 **구조적으로** 정리할 수 있습니다.
+
+**v4에서 바뀌는 점**
+
+- **CSS 우선**: `@import 'tailwindcss'` 한 번, `@theme { ... }`로 테마 정의. `tailwind.config.js` 없이 진입 CSS만으로 설정 가능.
+- **`@source '경로'`**: 호스트 빌드 시 지정한 경로(예: `node_modules/@wiid-get/design-system`)의 **소스**를 스캔해, **실제로 사용된 유틸리티만** 한 번에 생성.
+
+**1차 원인 해소**  
+디자인 시스템은 **Tailwind를 import하지 않는** CSS만 배포합니다. `:root` 변수와 `@theme { ... }`(색상, 그라데이션 등)만 넣고, `@tailwind base`는 포함하지 않습니다.  
+base는 **호스트가 `@import 'tailwindcss'`로 한 번만** 적용하므로, base 이중 적용으로 블로그 테마 커스터마이징이 덮어써지는 상황이 사라집니다.
+
+**2차 원인 해소**  
+디자인 시스템은 **미리 빌드한 components/utilities CSS**를 더 이상 배포하지 않습니다.  
+호스트 CSS에서 `@source '../node_modules/@wiid-get/design-system'`를 지정하면, **호스트의 Tailwind 빌드 한 번**으로 디자인 시스템 패키지 안에서 **실제로 쓰인 클래스만** 생성됩니다.  
+"기본 Tailwind 스타일까지 라이브러리에 포함되던" 문제와 중복·번들·오버라이드 혼선이 줄어듭니다.
+
+**tech-blog에서의 실제 v4 설정**
+
+- `package.json`에 Tailwind 및 관련 플러그인 의존성 추가
+- `postcss.config.js`에서 Tailwind PostCSS 플러그인 사용
+- `css/tailwind.css`에서 `@import 'tailwindcss'` 후 `@import '@wiid-get/design-system/index.css'`, `@source '../node_modules/@wiid-get/design-system'` 지정
+
+디자인 시스템은 base를 넣지 않는 소스 CSS(변수 + `@theme`)만 제공하고, 유틸리티는 호스트가 `@source`로 패키지를 스캔해 한 번만 생성하므로, base 덮어쓰기와 "기본 Tailwind까지 포함되던" 문제 없이 사용할 수 있습니다.
+
+---
+
+## 5. 참고: Tailwind·레이어 최소 개념
+
+필요할 때만 참고하면 되는 배경입니다.
+
+**Tailwind**는 유틸리티 퍼스트 엔진으로, `px-4`, `bg-blue-500` 같은 작은 클래스를 조합해 UI를 만듭니다. 빌드 시 소스에서 사용된 클래스 토큰을 추출해 테마에 맞춰 CSS를 생성합니다.
+
+**레이어**  
+CSS `@layer`로 우선순위를 제어합니다. Tailwind는 **base**(Preflight 리셋), **components**(비어 있음, 사용자 정의), **utilities**(유틸리티 클래스) 세 레이어를 쓰고, `utilities` > `components` > `base` 순으로 우선합니다. 같은 레이어 안에서는 **나중에 로드된 규칙이 우선**합니다.
+
+**v4**  
+`@import 'tailwindcss'` 한 번으로 theme·base·utilities가 들어가고, `@theme`로 테마를, `@source`로 외부 패키지까지 스캔해 **한 프로젝트에서 Tailwind를 한 번만** 실행할 수 있습니다.
+
+---
+
+## 6. 마무리
+
+디자인 시스템이 호스트 스타일을 **침투해 덮어쓰는** 게 아니라, **한 번의 스타일 계층 안에서 자연스럽게 합쳐지는** 구조가 되도록 맞춘 경험이었습니다.
+
+**정리한 원칙**
+
+1. **전역 스타일은 호스트가 담당** — Preflight(base)는 호스트 한 곳에서만 적용하고, 라이브러리 CSS는 Tailwind를 import하지 않는다.
+2. **단일 빌드** — v4에서는 `@source`로 라이브러리 소스를 스캔해, 유틸리티/컴포넌트 스타일을 한 번만 생성하고 중복을 제거한다.
+3. **테마·변수로 역할 구분** — 클래스 prefix 대신 `@theme`와 CSS 변수 이름으로 네임스페이스를 나눈다.
+4. **Tailwind 엔진 공유** — `tailwindcss`는 `peerDependencies`로 두어 호스트와 하나의 엔진만 사용한다.
+
+이렇게 정리하고, **Tailwind v4 업그레이드**까지 적용하면, 디자인 시스템과 tech-blog 같은 호스트가 역할을 나누고 **한 번의 스타일 빌드**로 조화롭게 동작하는 구조를 만들 수 있었습니다.
