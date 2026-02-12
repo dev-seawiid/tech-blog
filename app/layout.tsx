@@ -100,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </SectionContainer>
         </ThemeProviders>
+        {/* {process.env.NODE_ENV === 'development' && <Agentation />} */}
       </body>
     </html>
   )

@@ -3,7 +3,7 @@ const siteMetadata = {
   title: 'Algae-rithm 개발 블로그',
   author: 'dev-seawiid',
   headerTitle: 'Algae-rithm 개발 블로그',
-  description: '개발 기록, 회고 및 트러블슈팅...',
+  description: 'Frontend Developer, Tech Blogger, Music Lover',
   language: 'ko-kr',
   theme: 'system', // system, dark or light
   siteUrl: 'https://dev-seawiid.github.io/tech-blog',

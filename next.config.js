@@ -78,6 +78,12 @@ module.exports = () => {
           protocol: 'https',
           hostname: 'picsum.photos',
         },
+        // Fix for "Invalid src prop (https://github.com/dev-seawiid.png)" error.
+        // Added on 2026-02-12 to allow GitHub avatar images.
+        {
+          protocol: 'https',
+          hostname: 'github.com',
+        },
       ],
       unoptimized,
     },
