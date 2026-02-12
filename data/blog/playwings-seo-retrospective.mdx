@@ -1,0 +1,331 @@
+---
+title: 'Next 쓰고 meta 태그 달면 SEO 개선 끝?'
+date: '2026-02-04'
+tags: ['회고']
+draft: false
+summary: '광고 수익 기반 서비스에서 MAU를 높이기 위해 진행한 SEO 개선 경험을 정리했습니다. 기술(구글·네이버 봇, Gatsby SSG, JSON-LD, 시맨틱·메타·URL)과 콘텐츠(키워드 전략, E-E-A-T, 내부·백링크, 시즌 키워드·허브 사례)로 나누어 설명하고, 협업과 하나의 비즈니스 목표의 중요성을 마무리로 담았습니다.'
+layout: PostWithTOC
+---
+
+## 1. 비즈니스 목표 이해가기
+
+2022년부터 2023년 6월까지 담당했던 `플레이윙즈` 서비스에서의 경험을 공유합니다. 플레이윙즈는 항공권·호텔·투어·액티비티 등 여행 특가를 알리는 서비스이며, 상품을 직접 판매하지 않고 링크를 제공하는 구조라 핵심 비즈니스 모델은 <strong>광고 노출 및 클릭 수익</strong>입니다. 따라서 <strong>MAU(Monthly Active Users)</strong>가 서비스 성과에 직결됩니다.
+
+프론트엔드 개발자로서 단순히 디자이너의 시안을 코드로 옮기는 'UI 구현'의 단계를 넘어, "어떻게 하면 서비스의 근본적인 성장에 기여할 수 있을지" 고민했습니다. 서비스 성능 최적화(Lighthouse), 웹 접근성 개선 등 다양한 방법이 있지만, 그 중 여기서는 <strong>SEO(Search Engine Optimization, 검색 엔진 최적화)</strong>를 개선했던 경험에 대해서 공유해보려고 합니다.
+
+## 2. SEO는 왜 중요할까?
+
+MAU를 높이기 위해서는 기존 사용자의 리텐션(Retention)도 중요하지만, 외부 채널로부터의 끊임없는 <strong>신규 유입(Acquisition)</strong>이 필수적입니다.
+
+1.  <strong>자생적 유입 경로 확보</strong>: 광고비 집행 없이도 검색 결과 상단 노출을 통해 양질의
+    타겟 유저를 지속적으로 확보할 수 있습니다.
+2.  <strong>콘텐츠 가치 극대화</strong>: 플레이윙즈가 보유한 강력한 특가 정보와 여행 콘텐츠가 검색
+    로봇(Crawler)에 의해 더 잘 발견되도록 구조화하는 것이 기술적 우선순위였습니다.
+
+이러한 판단 하에, 저는 <strong>"콘텐츠 노출 극대화"</strong>를 목표로 삼고 사내에서 콘텐츠팀과 연계한 <strong>SEO 스터디</strong>에 프론트엔드팀의 대표로 참여했습니다. 개발팀과 콘텐츠팀이 함께 검색 엔진의 원리를 이해하고, 기술적/콘텐츠적 전략을 수립하여 실행에 옮겼습니다.
+
+---
+
+## 3. 검색 엔진의 이해: Google vs Naver
+
+전략을 세우기에 앞서, 우리가 타겟하는 두 주요 검색 엔진의 차이를 이해해야 했습니다. 특히 <strong>자바스크립트(JS) 렌더링 능력</strong>에서 큰 차이가 있었습니다.
+
+### 1) 구글봇 (Googlebot)
+
+구글은 전 세계에서 자바스크립트 렌더링 능력이 가장 뛰어난 검색 엔진입니다.
+
+- <strong>풀 렌더링(Full Rendering)</strong>: 최신 버전의 크롬(Chrome) 브라우저 엔진을 사용하여,
+  사용자가 보는 화면과 거의 동일하게 JS를 실행하고 콘텐츠를 읽어냅니다.
+- <strong>2단계 색인 구조</strong>: 1. <strong>1차 수집</strong>: JS를 실행하지 않은 초기 HTML을
+  먼저 읽어 기본적인 내용을 파악합니다. 2. <strong>2차 렌더링</strong>: 리소스가 확보되는 대로 JS를
+  실행하여 동적으로 생성된 콘텐츠(React, Vue 등 SPA)를 색인합니다.
+- <strong>높은 신뢰도</strong>: 복잡한 SPA(Single Page Application) 사이트도 비교적 문제없이
+  노출됩니다.
+
+### 2) 네이버 예티 (Yeti)
+
+네이버 역시 최근 기술 업데이트를 통해 JS 실행 능력을 확보했으나, 구글보다는 보수적입니다.
+
+- <strong>조건부 렌더링</strong>: 페이지 방문 시 JS가 있다면 실행을 시도하지만, 모든 리소스를
+  완벽하게 처리한다고 보장하기 어렵습니다.
+- <strong>SSG/SSR 권장</strong>: 네이버는 공식적으로
+  <strong>"주요 콘텐츠는 가급적 서버 사이드 렌더링(SSR)을 통해 제공할 것"</strong>을 강력히
+  권장합니다.
+- <strong>색인 지연 위험</strong>: JS 처리에 비용이 들기 때문에, 순수 HTML 사이트보다 색인이
+  느려지거나 누락될 가능성이 구글보다 상대적으로 높습니다.
+
+---
+
+## 4. SEO 개선 항목 분류: 기술 vs 콘텐츠
+
+SEO 작업을 <strong>기술적으로 해결 가능한 부분</strong>과 <strong>콘텐츠적으로 개선해야 할 부분</strong>으로 나누어 정리했습니다. 개발팀과 콘텐츠팀이 각자의 영역을 명확히 인식하고 협업할 수 있도록 했습니다.
+
+| 구분                                      | 담당     | 대표 항목                                                                                                      |
+| ----------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| <strong>기술적으로 해결 가능</strong>     | 개발팀   | SSG/렌더링, 사이트맵·robots.txt, JSON-LD 구조화 데이터, 메타 태그·Helmet, 시맨틱 HTML, 이미지 최적화, URL 구조 |
+| <strong>콘텐츠적으로 개선해야 할</strong> | 콘텐츠팀 | 키워드 선정·배치, 제목·설명 문구, E-E-A-T 기반 원고 품질, 내부 링크 키워드 선택, 시즌/트렌드 키워드 활용       |
+
+이하 두 섹션에서 각각 기술 항목과 콘텐츠 항목을 묶어 정리했습니다.
+
+---
+
+## 5. 기술적으로 해결 가능한 부분
+
+검색 봇이 웹사이트를 원활하게 읽고(Crawl) 인덱싱(Index)할 수 있도록, 개발팀에서 구현·제어할 수 있는 항목들입니다. 당시 플레이윙즈는 이미 <strong>Gatsby(SSG)</strong> 기반으로 구성되어 있었습니다.
+
+### 1) 렌더링 전략 (SSG)
+
+Gatsby는 빌드 타임에 HTML을 미리 생성하는 <strong>정적 사이트 생성(SSG)</strong> 방식이라, 봇이 방문하자마자 완성된 HTML을 읽을 수 있었습니다. JS 실행을 기다리지 않아도 되므로 색인 속도와 정확도에 유리했고, JS 처리가 상대적으로 보수적인 네이버 예티 대응에도 도움이 되었습니다.
+
+### 2) 페이지 속도 및 모바일 최적화
+
+속도는 구글의 주요 랭킹 요소 중 하나입니다. Gatsby 환경에서는 다음 장점을 활용할 수 있었습니다.
+
+- <strong>이미지 최적화</strong>: `gatsby-plugin-image`로 WEBP 변환·레이지 로딩을 빌드 단계에서
+  적용할 수 있어, 별도 서버 설정 없이 이미지 최적화가 가능했습니다.
+- <strong>정적 HTML·빠른 초기 로딩</strong>: SSG 덕분에 첫 화면이 빨리 뜨며, 모바일 인덱싱 우선
+  정책(Mobile-First Indexing)과 Core Web Vitals 측면에서 유리했습니다. 반응형 디자인으로 모바일
+  가독성과 사용성도 유지했습니다.
+
+### 3) HTTPS 및 보안
+
+사이트의 보안을 강화하는 HTTPS 사용은 사용자 신뢰도뿐만 아니라 검색 순위에도 긍정적인 영향을 줍니다.
+
+### 4) 사이트맵(Sitemap) 및 Robots.txt 자동화
+
+검색 엔진에 사이트 구조를 알리고, 수집이 필요 없는 페이지를 제어하기 위해 자동화 파이프라인을 구축했습니다.
+
+```javascript
+// gatsby-config.js
+module.exports = {
+  plugins: [
+    `gatsby-plugin-sitemap`,
+    {
+      resolve: 'gatsby-plugin-robots-txt',
+      options: {
+        host: 'https://www.playwings.com',
+        sitemap: 'https://www.playwings.com/sitemap.xml',
+        policy: [{ userAgent: '*', allow: '/' }],
+      },
+    },
+  ],
+}
+```
+
+### 5) 구조화 데이터: JSON-LD (Schema.org)
+
+<strong>JSON-LD</strong>는 "이 페이지가 무엇인지"를 검색 엔진이 기계로 읽을 수 있게 알려 주는 데이터 형식입니다. <strong>Schema.org</strong> 규격의 JSON을 `<script type="application/ld+json">` 안에 넣어 두면, 구글·네이버가 사이트·조직·페이지 유형을 명확히 해석할 수 있고, 리치 스니펫 노출이나 색인·CTR 개선에 도움이 됩니다.
+
+<strong>플레이윙즈 적용</strong>
+
+- <strong>대상</strong>: 홈페이지와 주요 페이지입니다.
+- <strong>홈</strong> ([playwings.co.kr](https://www.playwings.co.kr/)):
+  <strong>Organization</strong> 스키마로 서비스명, URL, SNS·앱 스토어 링크(`sameAs`)를 전달해, "누가
+  운영하는 서비스인지"와 공식 채널을 봇이 알 수 있게 했습니다.
+
+<strong>넣는 방법</strong>
+
+- 페이지 `<head>`에 `<script type="application/ld+json">` 태그를 두고, 그 안에 Schema.org에 맞는 JSON을 넣었습니다.
+- Gatsby는 주입한 내용을 빌드 시 `head`에 넣으며, 이때 <code>data-gatsby-head="true"</code>가 붙은 스크립트로 들어갑니다.
+
+<strong>홈에 넣었던 Organization 예시</strong>
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "플레이윙즈 - 특가 알림으로 여행 시작, 플레이윙즈",
+  "url": "https://www.playwings.co.kr/",
+  "sameAs": [
+    "https://www.instagram.com/playwings_app/",
+    "https://www.facebook.com/playwings",
+    "https://blog.naver.com/playwings",
+    "https://www.youtube.com/@playwings6824",
+    "https://play.google.com/store/apps/details?id=com.fridaynoons.playwings",
+    "https://itunes.apple.com/kr/app/id1050019372"
+  ]
+}
+```
+
+다른 페이지는 성격에 맞게 <strong>Article</strong>(매거진), <strong>Product</strong>(특가·상품), <strong>BreadcrumbList</strong>(계층 노출) 등을 같은 방식으로 넣었습니다.
+
+### 6) 시맨틱 마크업 (Semantic HTML)
+
+`div` 남발을 지양하고, 의미 있는 태그를 쓰는 데 특히 <strong>헤딩 구조(h1, h2, h3…)</strong>를 중요하게 두었습니다.
+
+<strong>헤딩 구조가 깨지면 생기는 문제</strong>
+
+- <strong>검색 엔진</strong>: 봇은 글자 크기가 아니라 <strong>태그 위계</strong>로 "이 페이지의
+  주제·구조"를 파악합니다. - <strong>h1 누락</strong>: 표지 제목이 없는 책과 같습니다. 페이지가
+  무엇에 대한 것인지 봇이 확신하지 못해 검색 순위에서 불이익을 받을 수 있습니다. -
+  <strong>순서 건너뛰기 (h1 → h3)</strong>: 중간 단계(h2) 없이 하위 제목만 나오면, 봇은 논리적
+  흐름이 끊겼다고 보고 사이트 품질을 낮게 평가할 수 있습니다.
+- <strong>웹 접근성</strong>: 스크린 리더는 헤딩을 기준으로 콘텐츠를 건너뛰며 읽어 줍니다. 순서가
+  뒤섞이면 구조를 이해하기 어렵고, SEO를 넘어 웹 표준·접근성 측면에서도 문제가 됩니다.
+
+<strong>h1 관련해서 자주 나오는 실수 3가지</strong>
+
+1. <strong>한 페이지에 h1 여러 개</strong>
+   SEO 가이드는 <strong>페이지당 h1 하나</strong>를 권장합니다. h1이 많으면 "진짜 제목"이 무엇인지
+   봇이 헷갈리고, 키워드 집중도가 흐려집니다.
+
+2. <strong>h1을 로고 이미지에만 쓰는 경우</strong>
+   로고에 h1을 쓰고, 이미지 `alt`가 비어 있거나 "로고" 수준이면 검색 엔진은 페이지 제목을 "로고"로
+   인식합니다. → 로고에 쓸 때도 `alt`에 서비스명·핵심 키워드를 넣거나, 숨김 텍스트(A11y)로 제목
+   정보를 함께 제공하는 것이 좋습니다.
+
+3. <strong>`<title>`과 `<h1>`이 서로 다른 내용</strong>  
+탭에 보이는 `title`과 본문 h1이 딴 이야기면 사용자·검색 엔진 모두 혼란스럽습니다. 두 태그는 보완 관계를 갖고, 핵심 키워드를 공유하는 편이 좋습니다.
+
+<strong>플레이윙즈에서의 적용</strong>
+
+콘텐츠는 <strong>Contentful</strong>이라는 CMS(Content Management System)로 관리했기 때문에, 디자인·콘텐츠팀이 HTML 형태로 직접 편집했습니다. <strong>h1 누락</strong>, <strong>h1 다음에 바로 h3</strong>처럼 계층이 건너뛰어지지 않도록 가이드를 두고 점검했습니다.
+
+- <strong>HTML 작성자</strong>: 크롬 익스텐션의 페이지 SEO 체커를 사용해 본인이 작성한 페이지를
+  확인하도록 안내했습니다.
+
+### 7) 메타 데이터 최적화
+
+CTR과 SNS 공유 시 미리보기 품질을 위해 <strong>페이지별</strong> 메타 태그를 넣었습니다.
+
+Gatsby에서는 페이지(또는 템플릿)마다 <strong>Head</strong>를 export하는 방식으로 해당 페이지만의 `head` 내용을 정의합니다. 빌드 시 각 페이지를 HTML로 만들 때 이 Head가 실행되고, 그 결과가 그 페이지의 정적 HTML `head`에 합쳐집니다. 즉, 페이지 데이터(제목, 요약, 썸네일, URL 등)는 GraphQL이나 `pageContext`로 넘어오고, 그 값을 쓰는 Head만 페이지·템플릿별로 export해 두면 빌드 타임에 올바른 메타가 각 HTML에 들어갑니다.
+
+<strong>관리했던 메타 태그</strong>
+
+| 용도                             | 태그                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| <strong>검색·탭</strong>         | `title`, `meta name="title"`, `meta name="description"`                                      |
+| <strong>오픈 그래프(OG)</strong> | `og:type`, `og:title`, `og:description`, `og:url`, `og:site_name`, `og:image`                |
+| <strong>트위터 카드</strong>     | `twitter:title`, `twitter:description`, `twitter:card`(summary_large_image), `twitter:image` |
+| <strong>페이스북</strong>        | `fb:app_id`                                                                                  |
+
+매거진 글처럼 `og:type="article"`인 페이지에서는 위 OG·Twitter 메타와 함께 `title`을 "글 제목 - 플레이윙즈" 형태로 맞춰 두었습니다.
+
+```tsx
+// 페이지 또는 템플릿에서 Head export. 빌드 시 이 결과가 해당 페이지 HTML의 head에 들어갑니다.
+export function Head({ data }) {
+  const { title, summary, thumbnail, url } = data.article
+  const fullTitle = `${title} - 플레이윙즈`
+  return (
+    <>
+      <title>{fullTitle}</title>
+      <meta name="title" content={fullTitle} />
+      <meta name="description" content={summary} />
+      <meta property="og:type" content="article" />
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={summary} />
+      <meta property="og:url" content={url} />
+      <meta property="og:site_name" content="플레이윙즈 - 특가 알림으로 여행 시작, 플레이윙즈" />
+      <meta property="og:image" content={thumbnail} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={summary} />
+      <meta name="twitter:image" content={thumbnail} />
+      <meta property="fb:app_id" content={process.env.GATSBY_FB_APP_ID} />
+    </>
+  )
+}
+```
+
+### 8) URL 구조
+
+`/blog/seo-guide`처럼 의미를 알 수 있는 간결한 URL을 쓰면 로봇이 페이지 내용을 유추하기 쉽고, SEO에 유리합니다. 다만 플레이윙즈 매거진은 이미 <strong>Contentful 아티클 ID</strong>를 URL에 쓰는 구조로 되어 있어서, 의미 기반 URL로 바꾸기는 어렵다는 한계가 있었습니다.
+
+---
+
+## 6. 콘텐츠적으로 개선해야 할 부분
+
+키워드 선정, 문구 작성, 품질 가이드, 내부·외부 링크 전략은 <strong>콘텐츠팀이 주도</strong>했고, 개발팀은 메타·템플릿·링크 구현 등으로 지원했습니다. 이 영역은 개발만으로 해결할 수 없어 <strong>콘텐츠팀과의 협업</strong>이 필수였습니다.
+
+---
+
+### 1) 키워드 전략
+
+<strong>목표·역할</strong>
+사용자가 검색할 법한 핵심 키워드를 선정해 제목, 메타 설명, 본문에 반영했습니다. 키워드 선정과 문구
+작성은 콘텐츠팀, 메타 필드·템플릿 제공은 개발팀이 맡았습니다.
+
+<strong>전략적 선정이 필요한 이유</strong>
+검색량이 큰 키워드는 경쟁도 커서, 이미 상위를 차지한 대형 매체·기존 자료에 밀리기 쉽습니다. 그래서
+검색량만 보지 않고 <strong>"우리가 올라갈 수 있는"</strong> 키워드를 고르는, 승률 높은 싸움을
+했습니다.
+
+<strong>선정 절차(4단계)</strong>
+
+| 단계                                         | 내용                                                                                                                                                                                                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <strong>1. 시드 키워드 확장</strong>         | 서비스 핵심 가치와 맞는 넓은 단어(항공권, 삿포로 여행, 땡처리 등)에서 시작해, 브레인스토밍·경쟁사 분석·구글·네이버 검색어 자동 완성을 활용했습니다.                                                                                                 |
+| <strong>2. 데이터 기반 필터링</strong>       | 네이버 트렌드, 구글 검색 트렌드로 <strong>검색량(Volume)</strong>과 <strong>난이도(Competition)</strong>를 확인했습니다. 상위에 언론사·대형 커뮤니티가 있으면 피하고, 우리가 차별화해 답할 수 있는 키워드를 골랐습니다.                             |
+| <strong>3. 검색 의도(Search Intent)</strong> | 사용자가 <strong>정보</strong>를 찾는지(예: "삿포로 2월 날씨"), <strong>구매·이용</strong>을 의도하는지(예: "삿포로 특가 항공권") 구분했습니다. 플레이윙즈는 <strong>정보성 유입 → 상업성(예매) 연결</strong>이 되는 브릿지 콘텐츠 전략을 썼습니다. |
+| <strong>4. 롱테일(Long-tail) 발굴</strong>   | "항공권" 같은 단일 키워드는 경쟁이 치열하므로, "직장인 혼자 가기 좋은 3박 4일 일본 여행"처럼 길고 구체적인 키워드를 노렸습니다. 검색량은 적어도 <strong>전환율(클릭·이용)</strong>이 높습니다.                                                      |
+
+<strong>실무에서 쓴 보조 전략</strong>
+
+- <strong>시즌성 키워드 선점</strong>: 여행은 시즌이 뚜렷해, 검색량이 올라오기
+  <strong>2~3개월 전</strong>에 콘텐츠를 배포해 인덱싱 시간을 확보하는 전략을 썼습니다. ("여름
+  휴가"를 7월에 쓰면 이미 늦습니다.)
+- <strong>질의응답형(Topic Cluster)</strong>: "일본 여행 갈 때 엔화 환전 어디서 하나요?"처럼 질문형
+  키워드에 답하는 콘텐츠로, 구글 <strong>강조된 스니펫(Featured Snippets)</strong> 노출 가능성을
+  높였습니다.
+
+<strong>피드백</strong>
+구글 서치 콘솔에서 노출·클릭 결과를 확인하고, 다음 기획에 반영했습니다.
+
+---
+
+### 2) 콘텐츠 품질 (E-E-A-T)
+
+구글의 품질 평가 기준인 <strong>전문성(Expertise), 권위(Authoritativeness), 신뢰성(Trustworthiness)</strong>을 갖춘, 독창적이고 유용한 콘텐츠를 정기적으로 게시하도록 가이드를 마련했습니다.
+
+---
+
+### 3) 내부 링크·백링크
+
+<strong>내부 링크</strong>
+내부 링크는 단순한 연결이 아니라, 검색 로봇이 사이트를 골고루 수집하게 돕고(
+<strong>Crawlability</strong>), 개별 페이지가 가진 권한(<strong>Link Juice</strong>)을 다른 페이지로
+전달하는 역할을 합니다. 어떤 키워드로 어떤 페이지를 이을지는 콘텐츠 전략에서 정하고, 개발팀은 링크와
+UI를 구현했습니다.
+
+- <strong>전략적 앵커 텍스트</strong>: "여기"처럼 모호한 표현 대신, "일본 항공권 예약 꿀팁"처럼
+  <strong>핵심 키워드가 담긴 앵커</strong>에 링크를 걸어 봇이 연결 페이지의 주제를 파악하기 쉽게
+  했습니다.
+- <strong>CTA(Call to Action) 설계</strong>: 단순 유입(MAU)을 넘어 수익화로 연결하려고, 콘텐츠
+  중간·하단에 관련 특가 페이지로 이동하는 버튼을 넣었습니다. 체류 시간 증가와 함께, 검색 엔진에
+  "사용자 의도를 해결하는 유용한 종착지"라는 신호를 주는 효과도 노렸습니다.
+- <strong>컴포넌트화</strong>: 개발팀은 '추천 콘텐츠 카드', '관련 특가 링크'처럼
+  <strong>재사용 가능한 컴포넌트</strong>를 만들어, 콘텐츠팀이 내부 링크 구조를 쉽게 만들 수 있는
+  환경을 제공했습니다.
+
+<strong>백링크</strong>
+백링크는 타 사이트로부터 받는 '추천서'와 같습니다. 구글·네이버는 외부에서 많이 인용되는 사이트를
+신뢰할 수 있는 출처로 봅니다. 우리는 <strong>신뢰할 수 있는 외부 출처</strong>(백과사전형·커뮤니티형
+사이트)에 서비스 공식 정보와 유용한 여행 가이드를 레퍼런스로 등재해, 검색 엔진이 참조할 수 있는
+공신력을 구축했습니다. 이를 통해 <strong>도메인 권위(Domain Authority)</strong>를 높이고, 전체
+콘텐츠의 검색 순위 개선에 쓰고자 했습니다. 한편 좋은 백링크는 사용자의 자발적 공유에서도 나오므로,
+<strong>OG 태그</strong>를 정교하게 넣어 블로그·커뮤니티에 링크가 공유될 때 미리보기가 잘 보이도록
+했습니다.
+
+---
+
+### 4) 사례: 시즌 키워드 + 내부 링크 (겹벚꽃, 허브 전략)
+
+<strong>사례 1: 겹벚꽃 → 봄 특가</strong>
+<strong>시즌성 키워드 선점</strong>과 <strong>내부 링크(CTA)</strong>를 함께 쓴 대표 사례가
+겹벚꽃입니다. 봄에는 '겹벚꽃'이 검색량이 가장 높아, 겹벚꽃 명소·봄 여행 가이드 글에 '겹벚꽃'을
+자연스럽게 넣고, "겹벚꽃 구경과 함께 저렴한 봄 항공 특가를 확인해 보세요"처럼 봄 특가 페이지로
+연결하는 앵커 문구를 넣었습니다. 개발 측에서는 해당 앵커에 내부 링크를 걸고, 관련 상품·이벤트
+페이지를 시맨틱하게 연결했습니다. 겹벚꽃 검색 유입이 봄 특가 페이지 방문으로 이어지는 경로가 늘었고,
+이 패턴은 여름 휴가·겨울 스키 등 다른 시즌에도 재사용했습니다.
+
+<strong>사례 2: 콘텐츠 허브(Hub) 전략</strong>
+<strong>'삿포로 여행'</strong> 같은 대형 시즌 키워드를 노리기 위해, '삿포로 축제 정보', '삿포로 맛집
+리스트', '삿포로 숙소 추천' 등 <strong>세부 콘텐츠</strong>를 먼저 발행했습니다. 이 세부 글이 다시
+<strong>'삿포로 특가 항공권'</strong>이라는 메인 페이지(Hub)를 가리키게 해, 특정 주제에 대한
+사이트의 전문성을 검색 엔진에 보여 주는 <strong>Link Silo</strong> 구조를 만들었습니다.
+
+---
+
+## 마치며
+
+SEO 개선은 기술만 보면 어렵지 않습니다. 다만 개발팀과 콘텐츠팀이 업무 경계만 나누어 놓으면, 막히는 부분이 많아집니다. 반대로 <strong>하나의 비즈니스 목표</strong>를 두고 협업했을 때, 실제 지표(MAU, 유입, 전환) 개선으로 이어질 수 있다는 것을 이번에 경험했습니다.
